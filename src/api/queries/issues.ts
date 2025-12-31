@@ -7,9 +7,16 @@ export const REPO_ISSUES_QUERY = gql`
     $states: [IssueState!]
     $first: Int!
     $after: String
+    $orderBy: IssueOrder = { field: UPDATED_AT, direction: DESC }
   ) {
     repository(owner: $owner, name: $name) {
-      issues(first: $first, after: $after, states: $states) {
+      openIssues: issues(states: [OPEN]) {
+        totalCount
+      }
+      closedIssues: issues(states: [CLOSED]) {
+        totalCount
+      }
+      issues(first: $first, after: $after, states: $states, orderBy: $orderBy) {
         totalCount
         nodes {
           id
@@ -17,6 +24,10 @@ export const REPO_ISSUES_QUERY = gql`
           title
           state
           updatedAt
+          createdAt
+          comments {
+            totalCount
+          }
           author {
             login
           }
