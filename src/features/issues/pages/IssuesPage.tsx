@@ -1,7 +1,8 @@
 import { useQuery } from "@apollo/client/react";
 import { REPO_ISSUES_QUERY } from "../../../api/queries/issues";
-import type { IssuesQueryData } from "../../../types/types";
+import type { IssuesQueryData, Issue } from "../../../types/types";
 import IssuesListItem from "../components/IssuesListItem";
+import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
 
 export default function IssuesPage() {
   const {
@@ -19,9 +20,9 @@ export default function IssuesPage() {
     },
   });
 
-  const totalCount = data?.repository?.issues?.totalCount ?? 0;
+  //const totalCount = data?.repository?.issues?.totalCount ?? 0;
   const issues = (data?.repository?.issues?.nodes ?? []) as Issue[];
-
+  console.log("issues", issues);
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -44,7 +45,7 @@ export default function IssuesPage() {
 
           <div className="issues-container pt-3">
             {loading ? (
-              <p className="text-sm">Retrieving issues...</p>
+              <IssuesListSkeleton rows={12} />
             ) : error ? (
               <>
                 <p className="text-sm text-red-700">Connection failed</p>
