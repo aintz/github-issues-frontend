@@ -24,41 +24,81 @@ export default function IssuesPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-3xl p-6">
-        <h1 className="text-2xl font-semibold">Issues</h1>
+      <div className="mx-auto mt-6 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
+          <h1 className="text-base">👋 Welcome to the react issues tracker!</h1>
+          <p className="text-sm">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae feugiat justo
+          </p>
+        </div>
+        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
+          <p className="text-sm">THE SEARCH BAR HERE</p>
+        </div>
 
-        <div className="mt-4 rounded-lg border p-4 text-sm">
-          {loading ? (
-            <p>retrieving issues...</p>
-          ) : error ? (
-            <>
-              <p className="font-medium text-red-700">Connection failed</p>
-              <p className="mt-1 text-red-700">{error.message}</p>
-              <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
-                Retry
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="mb-4">Total Issues: {totalCount}</p>
-              <p>total opened issues: {data?.repository?.openIssues?.totalCount ?? 0}</p>
-              <p>total closed issues: {data?.repository?.closedIssues?.totalCount ?? 0}</p>
-              {issues.map((issue) => (
-                <div key={issue.id} className="mb-2 border-b p-2">
-                  <h3 className="font-medium">{issue.title}</h3>
-                  <p>state: {issue.state}</p>
-                  <p>id: {issue.number}</p>
-                  <p>
-                    opened{formatTime(issue.createdAt)}{" "}
-                    {issue.updatedAt ? "· Updated " + formatTime(issue.updatedAt) : ""}
-                  </p>
-                  <p>author: {issue.author?.login ?? "unknown"}</p>
-                  <p>labels: {issue.labels.nodes.map((label) => label.name).join(", ")}</p>
-                  <p>comments: {issue.comments.totalCount}</p>
-                </div>
-              ))}
-            </>
-          )}
+        <div className="border-gh-muted mb-6 rounded-lg border text-left">
+          <div className="filter-container bg-gh-bg-highlighted">
+            <p className="text-sm">THE FILTERS HERE</p>
+            <p>open {data?.repository?.openIssues?.totalCount ?? 0}</p>
+            <p>closed {data?.repository?.closedIssues?.totalCount ?? 0}</p>
+          </div>
+
+          <div className="issues-container pt-3">
+            {loading ? (
+              <p className="text-sm">Retrieving issues...</p>
+            ) : error ? (
+              <>
+                <p className="text-sm text-red-700">Connection failed</p>
+                <p className="text-sm text-red-700">{error.message}</p>
+                <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
+                  Retry
+                </button>
+              </>
+            ) : (
+              <div className="issues-list-cotainer">
+                <ul>
+                  {issues.map((issue, index) => (
+                    <li
+                      className={`border-gh-muted px-4 py-2 ${index === issues.length - 1 ? "border-none" : "border-b"}`}
+                      key={issue.id}
+                    >
+                      <div className="issue-item flex gap-2">
+                        <div className="issue-icon"></div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <h3 className="text-base font-medium">{issue.title} </h3>
+                            {issue.labels.nodes.length > 0 && (
+                              <div className="flex items-center gap-1">
+                                {issue.labels.nodes.map((label) => (
+                                  <span key={label.id} className="issue-label text-xs font-medium">
+                                    {label.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="mt-1 flex gap-1">
+                            <p className="text-gh-gray text-xs">#{issue.number}</p>
+                            <p className="text-gh-gray text-xs">·</p>
+                            <p className="text-gh-gray text-xs">
+                              {issue.author?.login ?? "unknown"}
+                            </p>
+                            <p className="text-gh-gray text-xs">
+                              opened{formatTime(issue.createdAt)}{" "}
+                            </p>
+                            <p className="text-gh-gray text-xs">·</p>
+
+                            <p className="text-gh-gray text-xs">
+                              {issue.updatedAt ? "Updated " + formatTime(issue.updatedAt) : ""}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
