@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { REPO_ISSUES_QUERY } from "../../../api/queries/issues";
 import type { IssuesQueryData, Issue } from "../../../types/types";
 import { formatTime } from "../../../helpers/helpersFunctions";
+import { Link } from "react-router-dom";
 
 export default function IssuesPage() {
   const {
@@ -65,7 +66,9 @@ export default function IssuesPage() {
                         <div className="issue-icon"></div>
                         <div>
                           <div className="flex flex-wrap items-center gap-1">
-                            <h3 className="text-base font-medium">{issue.title} </h3>
+                            <Link to={`${issue.number}`} className="text-base font-medium">
+                              {issue.title}
+                            </Link>
                             {issue.labels.nodes.length > 0 && (
                               <div className="flex items-center gap-1">
                                 {issue.labels.nodes.map((label) => (
