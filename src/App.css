@@ -4,13 +4,45 @@
   --color-gh-bg: #0d1117;
   --color-gh-text: #f0f6fc;
   --color-gh-border: #30363d;
-  --color-gh-muted: #8b949e;
-  --radius-test: 37px;
-
+  --color-gh-muted: #626262;
+  --color-gh-orange: #f78166;
+  --color-gh-header-bg: #020408;
+  --color-gh-bg-highlighted: #15191e;
+  --color-gh-gray: #9198a1;
   --font-gh-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
 
   --font-gh-mono:
     ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+}
+
+@layer components {
+  .gh-tab-active {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--color-gh-orange);
+      height: 2px;
+      border-radius: 2px;
+    }
+  }
+
+  .issue-icon {
+    height: 16px;
+    width: 16px;
+    border: 1px solid red; /* For visualization during development */
+    border-radius: 20px;
+    margin-top: 5px;
+  }
+
+  .issue-label {
+    border: 1px solid red;
+    padding: 2px 7px;
+    border-radius: 13px;
+  }
 }
