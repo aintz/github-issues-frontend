@@ -22,7 +22,6 @@ export default function IssuesPage() {
 
   //const totalCount = data?.repository?.issues?.totalCount ?? 0;
   const issues = (data?.repository?.issues?.nodes ?? []) as Issue[];
-  console.log("issues", issues);
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl px-4 sm:px-6 lg:px-8">
