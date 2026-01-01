@@ -34,7 +34,7 @@ export default function IssuesListItem({ issue, isLast }: IssuesListItemProps) {
             <p className="text-gh-gray text-xs">#{issue.number}</p>
             <p className="text-gh-gray text-xs">·</p>
             <p className="text-gh-gray text-xs">{issue.author?.login ?? "unknown"}</p>
-            <p className="text-gh-gray text-xs">opened{formatTime(issue.createdAt)} </p>
+            <p className="text-gh-gray text-xs">opened {formatTime(issue.createdAt)} </p>
             <p className="text-gh-gray text-xs">·</p>
             <p className="text-gh-gray text-xs">
               {issue.updatedAt ? "Updated " + formatTime(issue.updatedAt) : ""}
