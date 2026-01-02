@@ -36157,6 +36157,14 @@ export type WorkflowsParametersInput = {
 
 export type _Entity = Issue;
 
+export type IssueFieldsFragment = { __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, createdAt: any, updatedAt: any, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
+    | { __typename?: 'Bot', login: string }
+    | { __typename?: 'EnterpriseUserAccount', login: string }
+    | { __typename?: 'Mannequin', login: string }
+    | { __typename?: 'Organization', login: string }
+    | { __typename?: 'User', login: string }
+   | null };
+
 export type IssuesQueryVariables = Exact<{
   owner: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -36167,18 +36175,34 @@ export type IssuesQueryVariables = Exact<{
 }>;
 
 
-export type IssuesQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', openIssues: { __typename?: 'IssueConnection', totalCount: number }, closedIssues: { __typename?: 'IssueConnection', totalCount: number }, issues: { __typename?: 'IssueConnection', totalCount: number, nodes?: Array<{ __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, updatedAt: any, createdAt: any, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
+export type IssuesQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', id: string, openIssues: { __typename?: 'IssueConnection', totalCount: number }, closedIssues: { __typename?: 'IssueConnection', totalCount: number }, issues: { __typename?: 'IssueConnection', totalCount: number, nodes?: Array<{ __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, createdAt: any, updatedAt: any, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', id: string, name: string, color: string } | null> | null } | null, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
           | { __typename?: 'Bot', login: string }
           | { __typename?: 'EnterpriseUserAccount', login: string }
           | { __typename?: 'Mannequin', login: string }
           | { __typename?: 'Organization', login: string }
           | { __typename?: 'User', login: string }
-         | null, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', id: string, name: string, color: string } | null> | null } | null } | null> | null } } | null };
+         | null } | null> | null } } | null };
 
-
+export const IssueFieldsFragmentDoc = gql`
+    fragment IssueFields on Issue {
+  id
+  number
+  title
+  state
+  createdAt
+  updatedAt
+  comments {
+    totalCount
+  }
+  author {
+    login
+  }
+}
+    `;
 export const IssuesDocument = gql`
     query Issues($owner: String!, $name: String!, $states: [IssueState!], $first: Int!, $after: String, $orderBy: IssueOrder = {field: UPDATED_AT, direction: DESC}) {
   repository(owner: $owner, name: $name) {
+    id
     openIssues: issues(states: [OPEN]) {
       totalCount
     }
@@ -36188,18 +36212,7 @@ export const IssuesDocument = gql`
     issues(first: $first, after: $after, states: $states, orderBy: $orderBy) {
       totalCount
       nodes {
-        id
-        number
-        title
-        state
-        updatedAt
-        createdAt
-        comments {
-          totalCount
-        }
-        author {
-          login
-        }
+        ...IssueFields
         labels(first: 5) {
           nodes {
             id
@@ -36211,7 +36224,7 @@ export const IssuesDocument = gql`
     }
   }
 }
-    `;
+    ${IssueFieldsFragmentDoc}`;
 
 /**
  * __useIssuesQuery__
