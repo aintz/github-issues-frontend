@@ -45,7 +45,6 @@ export default function IssuesPage() {
         <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
           <p className="text-sm">THE SEARCH BAR HERE</p>
         </div>
-
         <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
           <div className="filter-container bg-gh-bg-highlighted">
             <div className="flex px-4 py-2">
