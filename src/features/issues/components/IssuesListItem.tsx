@@ -1,23 +1,20 @@
 import { Link } from "react-router-dom";
-import type { Issue } from "../../../types/types";
 import { formatTime } from "../../../helpers/helpersFunctions";
+import type { IssueFieldsFragment } from "../../../generated/graphql";
 
 type IssuesListItemProps = {
-  issue: Issue;
+  issue: IssueFieldsFragment;
   isLast: boolean;
 };
 
-export default function IssuesListItem({ issue, isLast }) {
+export default function IssuesListItem({ issue, isLast }: IssuesListItemProps) {
   return (
-    <li
-      className={`border-gh-muted px-4 py-2 ${isLast ? "border-none" : "border-b"}`}
-      key={issue.id}
-    >
+    <li className={`border-gh-muted px-4 py-2 ${isLast ? "border-none" : "border-b"}`}>
       <div className="issue-item flex gap-2">
         <div className="issue-icon"></div>
         <div className="w-fit">
           <div className="flex flex-wrap items-center gap-1">
-            <Link to={`${issue.number}`} className="text-base font-medium">
+            <Link to={`/issues/${issue.number}`} className="text-base font-medium">
               {issue.title}
             </Link>
             {issue.labels.nodes.length > 0 && (
