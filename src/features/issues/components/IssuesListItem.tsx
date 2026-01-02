@@ -7,7 +7,7 @@ type IssuesListItemProps = {
   isLast: boolean;
 };
 
-export default function IssuesListItem({ issue, isLast }: IssuesListItemProps) {
+export default function IssuesListItem({ issue, isLast }) {
   return (
     <li
       className={`border-gh-muted px-4 py-2 ${isLast ? "border-none" : "border-b"}`}
@@ -15,7 +15,7 @@ export default function IssuesListItem({ issue, isLast }: IssuesListItemProps) {
     >
       <div className="issue-item flex gap-2">
         <div className="issue-icon"></div>
-        <div>
+        <div className="w-fit">
           <div className="flex flex-wrap items-center gap-1">
             <Link to={`${issue.number}`} className="text-base font-medium">
               {issue.title}
