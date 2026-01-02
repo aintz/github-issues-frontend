@@ -51,11 +51,15 @@ export default function IssuesPage() {
               </>
             ) : (
               <div className="issues-list-container">
-                <ul>
-                  {issues.map((issue, index) => (
-                    <IssuesListItem issue={issue} isLast={index === issues.length - 1} />
-                  ))}
-                </ul>
+                {issues && issues?.length > 0 ? (
+                  <ul>
+                    {issues.map((issue, index) => (
+                      <IssuesListItem issue={issue} isLast={index === issues.length - 1} />
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gh-muted p-6 text-center text-sm">No issues found</p>
+                )}
               </div>
             )}
           </div>
