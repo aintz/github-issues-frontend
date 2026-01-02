@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-gh-bg: #0d1117;
+  --color-gh-bg: #0c1116;
   --color-gh-text: #f0f6fc;
   --color-gh-border: #30363d;
-  --color-gh-muted: #626262;
+  --color-gh-muted: #2f353d;
   --color-gh-orange: #f78166;
   --color-gh-header-bg: #020408;
-  --color-gh-bg-highlighted: #15191e;
+  --color-gh-bg-highlighted: #151b23;
+  --color-gh-tab-bg: #252b34;
   --color-gh-gray: #9198a1;
   --font-gh-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif,
@@ -44,5 +45,11 @@
     border: 1px solid red;
     padding: 2px 7px;
     border-radius: 13px;
+  }
+
+  button:hover {
+    background-color: #252b34;
+    border-radius: 6px;
+    cursor: pointer;
   }
 }
