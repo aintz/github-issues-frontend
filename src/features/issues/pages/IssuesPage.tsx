@@ -1,30 +1,26 @@
-import { useQuery } from "@apollo/client/react";
-import { REPO_ISSUES_QUERY } from "../../../api/queries/issues";
-import type { IssuesQueryData, Issue } from "../../../types/types";
 import IssuesListItem from "../components/IssuesListItem";
 import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
+import { useIssuesQuery, IssueState } from "../../../generated/graphql";
 
 export default function IssuesPage() {
-  const {
-    data: data,
-    loading: loading,
-    error: error,
-    refetch: refetch,
-  } = useQuery<IssuesQueryData>(REPO_ISSUES_QUERY, {
+  const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
       owner: "facebook",
       name: "react",
-      states: ["OPEN"],
+      states: [IssueState.Open],
       first: 12,
       after: null,
     },
   });
 
   //const totalCount = data?.repository?.issues?.totalCount ?? 0;
-  const issues = (data?.repository?.issues?.nodes ?? []) as Issue[];
+  //const issues = (data?.repository?.issues?.nodes ?? []) as Issue[];
+
+  const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
+
   return (
     <>
-      <div className="mx-auto mt-6 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mt-6 max-w-7xl p-4">
         <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
           <h1 className="text-base">👋 Welcome to the react issues tracker!</h1>
           <p className="text-sm">
