@@ -1,22 +1,34 @@
 import IssuesListItem from "../components/IssuesListItem";
 import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
 import { useIssuesQuery, IssueState } from "../../../generated/graphql";
+import { useSearchParams } from "react-router-dom";
 
 export default function IssuesPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const paramState = searchParams.get("state")?.toLowerCase();
+
+  const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
+
   const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
       owner: "facebook",
       name: "react",
-      states: [IssueState.Open],
+      states: [currentState],
       first: 12,
       after: null,
     },
   });
 
-  //const totalCount = data?.repository?.issues?.totalCount ?? 0;
-  //const issues = (data?.repository?.issues?.nodes ?? []) as Issue[];
-
   const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
+
+  function setParams(label: string, param: string) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.set(label, param);
+      return params;
+    });
+  }
 
   return (
     <>
@@ -31,11 +43,38 @@ export default function IssuesPage() {
           <p className="text-sm">THE SEARCH BAR HERE</p>
         </div>
 
-        <div className="border-gh-muted mb-6 rounded-lg border text-left">
+        <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
           <div className="filter-container bg-gh-bg-highlighted">
-            <p className="text-sm">THE FILTERS HERE</p>
-            <p>open {data?.repository?.openIssues?.totalCount ?? 0}</p>
-            <p>closed {data?.repository?.closedIssues?.totalCount ?? 0}</p>
+            <div className="flex px-4 py-2">
+              <div className="flex gap-0">
+                <button
+                  className={`${
+                    !paramState || paramState === "open" ? "text-gh-text" : "text-gh-gray"
+                  } flex items-center gap-1 px-2 py-2 text-sm font-bold`}
+                  onClick={() => setParams("state", "open")}
+                >
+                  Open{" "}
+                  <span
+                    className={` ${loading ? "animate-pulse" : ""} bg-gh-tab-bg min-h-[28px] min-w-[45px] rounded-full px-2 py-1`}
+                  >
+                    {data?.repository?.openIssues?.totalCount ?? ""}
+                  </span>
+                </button>
+                <button
+                  className={`${
+                    !paramState || paramState === "closed" ? "text-gh-text" : "text-gh-gray"
+                  } flex items-center gap-1 px-2 py-2 text-sm font-bold`}
+                  onClick={() => setParams("state", "closed")}
+                >
+                  Closed{" "}
+                  <span
+                    className={` ${loading ? "animate-pulse" : ""} bg-gh-tab-bg min-h-[28px] min-w-[45px] rounded-full px-2 py-1`}
+                  >
+                    {data?.repository?.closedIssues?.totalCount ?? ""}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="issues-container pt-3">
@@ -53,9 +92,16 @@ export default function IssuesPage() {
               <div className="issues-list-container">
                 {issues && issues?.length > 0 ? (
                   <ul>
-                    {issues.map((issue, index) => (
-                      <IssuesListItem issue={issue} isLast={index === issues.length - 1} />
-                    ))}
+                    {issues.map(
+                      (issue, index) =>
+                        issue && (
+                          <IssuesListItem
+                            key={issue.id}
+                            issue={issue}
+                            isLast={index === issues.length - 1}
+                          />
+                        ),
+                    )}
                   </ul>
                 ) : (
                   <p className="text-gh-muted p-6 text-center text-sm">No issues found</p>
