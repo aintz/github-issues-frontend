@@ -87,4 +87,11 @@ describe("IssuesPage", () => {
     it("navigates to the issue detail view when clicking the title");
     it("handles no issues case gracefully");
   });
+
+  describe("Issues Filtering", () => {
+    it("Should change the button style based on the selected filter");
+    it("Should render closed issues when state is closed");
+    it("Should render open issues when state is open");
+    it("Should render open issues when no state is selected");
+  });
 });
