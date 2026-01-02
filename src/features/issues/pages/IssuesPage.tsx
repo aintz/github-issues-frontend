@@ -2,11 +2,14 @@ import IssuesListItem from "../components/IssuesListItem";
 import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
 import { useIssuesQuery, IssueState } from "../../../generated/graphql";
 import { useSearchParams } from "react-router-dom";
+import StateFilters from "../components/StateFilters";
 
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const paramState = searchParams.get("state")?.toLocaleLowerCase() ?? "open";
+  const paramState = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as
+    | "open"
+    | "closed";
 
   const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
 
@@ -47,32 +50,18 @@ export default function IssuesPage() {
           <div className="filter-container bg-gh-bg-highlighted">
             <div className="flex px-4 py-2">
               <div className="flex gap-0">
-                <button
-                  className={`${
-                    !paramState || paramState === "open" ? "text-gh-text" : "text-gh-gray"
-                  } flex items-center gap-1 px-2 py-2 text-sm font-bold`}
-                  onClick={() => setParams("state", "open")}
-                >
-                  Open{" "}
-                  <span
-                    className={` ${loading ? "animate-pulse" : ""} bg-gh-tab-bg min-h-[28px] min-w-[45px] rounded-full px-2 py-1`}
-                  >
-                    {data?.repository?.openIssues?.totalCount ?? ""}
-                  </span>
-                </button>
-                <button
-                  className={`${
-                    !paramState || paramState === "closed" ? "text-gh-text" : "text-gh-gray"
-                  } flex items-center gap-1 px-2 py-2 text-sm font-bold`}
-                  onClick={() => setParams("state", "closed")}
-                >
-                  Closed{" "}
-                  <span
-                    className={` ${loading ? "animate-pulse" : ""} bg-gh-tab-bg min-h-[28px] min-w-[45px] rounded-full px-2 py-1`}
-                  >
-                    {data?.repository?.closedIssues?.totalCount ?? ""}
-                  </span>
-                </button>
+                <StateFilters
+                  paramState={paramState}
+                  setParams={setParams}
+                  state="open"
+                  totalCount={data?.repository?.openIssues?.totalCount}
+                />
+                <StateFilters
+                  paramState={paramState}
+                  setParams={setParams}
+                  state="closed"
+                  totalCount={data?.repository?.closedIssues?.totalCount}
+                />
               </div>
             </div>
           </div>
