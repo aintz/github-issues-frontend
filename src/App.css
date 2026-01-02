@@ -1,42 +1,55 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+@import "tailwindcss";
+
+@theme {
+  --color-gh-bg: #0c1116;
+  --color-gh-text: #f0f6fc;
+  --color-gh-border: #30363d;
+  --color-gh-muted: #2f353d;
+  --color-gh-orange: #f78166;
+  --color-gh-header-bg: #020408;
+  --color-gh-bg-highlighted: #151b23;
+  --color-gh-tab-bg: #252b34;
+  --color-gh-gray: #9198a1;
+  --font-gh-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+
+  --font-gh-mono:
+    ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@layer components {
+  .gh-tab-active {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--color-gh-orange);
+      height: 2px;
+      border-radius: 2px;
+    }
   }
-  to {
-    transform: rotate(360deg);
+
+  .issue-icon {
+    height: 16px;
+    width: 16px;
+    border: 1px solid red; /* For visualization during development */
+    border-radius: 20px;
+    margin-top: 5px;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .issue-label {
+    border: 1px solid red;
+    padding: 2px 7px;
+    border-radius: 13px;
   }
-}
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  button:hover {
+    background-color: #252b34;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 }
