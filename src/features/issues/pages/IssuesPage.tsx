@@ -6,7 +6,7 @@ import { useSearchParams } from "react-router-dom";
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const paramState = searchParams.get("state")?.toLowerCase();
+  const paramState = searchParams.get("state")?.toLocaleLowerCase() ?? "open";
 
   const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
 
