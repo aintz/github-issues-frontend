@@ -34,7 +34,7 @@ export default function Header() {
         </svg>
         <p className="text-gh-text text-sm font-bold">Issues</p>
         <p className="text-gh-text text-sm font-bold">
-          <span className="bg-gh-bg-highlighted rounded-full px-2 py-1">865</span>
+          <span className="bg-gh-tab-bg rounded-full px-2 py-1">865</span>
         </p>
       </div>
     </header>
