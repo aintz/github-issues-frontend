@@ -85,9 +85,18 @@ export default function IssuesPage() {
     ? (searchResult.data?.closed?.issueCount ?? 0)
     : (data?.repository?.closedIssues?.totalCount ?? 0);
 
-  console.log("rawNodes", rawNodes);
-  console.log("total count", searchNodes);
   const issues = rawNodes.filter((i): i is NonNullable<typeof i> => i != null);
+
+  function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value === "") {
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete("query");
+        return params;
+      });
+    }
+  }
+
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
@@ -98,7 +107,11 @@ export default function IssuesPage() {
           </p>
         </div>
         <div className="mb-6">
-          <IssuesSearchBar onSubmit={submitSearch} defaultValue={searchParams} />
+          <IssuesSearchBar
+            onSubmit={submitSearch}
+            defaultValue={searchParams}
+            clearSearchIfEmpty={clearSearchIfEmpty}
+          />
         </div>
         <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
           <div className="filter-container bg-gh-bg-highlighted">

@@ -1,12 +1,18 @@
 type IssuesSearchBarProps = {
   onSubmit: (formData: FormData) => void;
   defaultValue?: URLSearchParams;
+  clearSearchIfEmpty?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export default function IssuesSearchBar({ onSubmit, defaultValue }: IssuesSearchBarProps) {
+export default function IssuesSearchBar({
+  onSubmit,
+  defaultValue,
+  clearSearchIfEmpty,
+}: IssuesSearchBarProps) {
   return (
     <form className="relative w-full" action={onSubmit}>
       <input
+        onChange={clearSearchIfEmpty}
         type="search"
         name="query"
         defaultValue={defaultValue?.get("query") ?? ""}
