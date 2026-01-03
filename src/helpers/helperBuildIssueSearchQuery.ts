@@ -1,10 +1,14 @@
 type sortParams = "created" | "updated" | "comments";
 type orderParams = "asc" | "desc";
 
-export function buildIssueSearchQuery(params: URLSearchParams): string {
+export function buildIssueSearchQuery(
+  params: URLSearchParams,
+  opts?: { includeState?: boolean },
+): string {
   const query = params.get("query") || "";
   if (!query) return "";
 
+  const includeState = opts?.includeState ?? true;
   const state = (params.get("state") ?? "open").toLowerCase();
   const sort = (params.get("sort") ?? "created").toLowerCase() as sortParams;
   const order = (params.get("order") ?? "desc").toLowerCase() as orderParams;
@@ -15,11 +19,13 @@ export function buildIssueSearchQuery(params: URLSearchParams): string {
   const result = [
     "repo:facebook/react",
     "is:issue",
-    statePrefix,
+    includeState ? statePrefix : "",
     sortPrefix,
     "in:title,body",
     query,
-  ].join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return result;
 }

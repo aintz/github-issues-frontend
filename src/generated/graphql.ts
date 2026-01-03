@@ -36187,10 +36187,12 @@ export type SearchIssuesQueryVariables = Exact<{
   query: Scalars['String']['input'];
   first: Scalars['Int']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
+  openQuery: Scalars['String']['input'];
+  closedQuery: Scalars['String']['input'];
 }>;
 
 
-export type SearchIssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', issueCount: number, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes?: Array<
+export type SearchIssuesQuery = { __typename?: 'Query', open: { __typename?: 'SearchResultItemConnection', issueCount: number }, closed: { __typename?: 'SearchResultItemConnection', issueCount: number }, results: { __typename?: 'SearchResultItemConnection', issueCount: number, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes?: Array<
       | { __typename?: 'App' }
       | { __typename?: 'Discussion' }
       | { __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, createdAt: any, updatedAt: any, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', name: string, color: string } | null> | null } | null, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
@@ -36291,8 +36293,14 @@ export type IssuesLazyQueryHookResult = ReturnType<typeof useIssuesLazyQuery>;
 export type IssuesSuspenseQueryHookResult = ReturnType<typeof useIssuesSuspenseQuery>;
 export type IssuesQueryResult = ApolloReactCommon.QueryResult<IssuesQuery, IssuesQueryVariables>;
 export const SearchIssuesDocument = gql`
-    query SearchIssues($query: String!, $first: Int!, $after: String) {
-  search(query: $query, type: ISSUE, first: $first, after: $after) {
+    query SearchIssues($query: String!, $first: Int!, $after: String, $openQuery: String!, $closedQuery: String!) {
+  open: search(query: $openQuery, type: ISSUE, first: 1) {
+    issueCount
+  }
+  closed: search(query: $closedQuery, type: ISSUE, first: 1) {
+    issueCount
+  }
+  results: search(query: $query, type: ISSUE, first: $first, after: $after) {
     issueCount
     pageInfo {
       endCursor
@@ -36328,6 +36336,8 @@ export const SearchIssuesDocument = gql`
  *      query: // value for 'query'
  *      first: // value for 'first'
  *      after: // value for 'after'
+ *      openQuery: // value for 'openQuery'
+ *      closedQuery: // value for 'closedQuery'
  *   },
  * });
  */
