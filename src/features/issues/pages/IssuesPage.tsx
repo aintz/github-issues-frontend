@@ -3,10 +3,16 @@ import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
 import { useIssuesQuery, IssueState } from "../../../generated/graphql";
 import { useSearchParams } from "react-router-dom";
 import StateFilters from "../components/StateFilters";
+import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
+import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
+import { useEffect, useCallback } from "react";
+import IssuesSearchBar from "../components/IssuesSearchBar";
 
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const query = (searchParams.get("query") ?? "").trim();
+  const isSearching = query.length > 0;
   const paramState = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as
     | "open"
     | "closed";
@@ -21,16 +27,74 @@ export default function IssuesPage() {
       first: 12,
       after: null,
     },
+    skip: isSearching,
   });
 
-  const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
+  const [runSearch, searchResult] = useSearchIssuesLazyQuery();
 
-  function setParams(label: string, param: string) {
+  useEffect(() => {
+    if (!isSearching) return;
+    const baseQuery = buildIssueSearchQuery(searchParams);
+    const countQuery = buildIssueSearchQuery(searchParams, { includeState: false });
+    runSearch({
+      variables: {
+        query: baseQuery,
+        openQuery: `${countQuery} is:open`,
+        closedQuery: `${countQuery} is:closed`,
+        first: 12,
+        after: null,
+      },
+    });
+  }, [isSearching, searchParams, runSearch]);
+
+  const setParams = useCallback(
+    (label: string, param: string) => {
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        params.set(label, param);
+        return params;
+      });
+    },
+    [setSearchParams],
+  );
+
+  function submitSearch(formData: FormData) {
+    const queryValue = formData.get("query")?.toString().trim() || "";
+
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
-      params.set(label, param);
+      if (queryValue) {
+        params.set("query", queryValue);
+      } else {
+        params.delete("query");
+      }
       return params;
     });
+  }
+
+  const listNodes = data?.repository?.issues?.nodes ?? [];
+  const searchNodes = searchResult.data?.results?.nodes ?? [];
+  const rawNodes = isSearching ? searchNodes : listNodes;
+  const currentLoading = isSearching ? searchResult.loading : loading;
+  const currentError = isSearching ? searchResult.error : error;
+
+  const totalOpenCount = isSearching
+    ? (searchResult.data?.open?.issueCount ?? 0)
+    : (data?.repository?.openIssues?.totalCount ?? 0);
+  const totalClosedCount = isSearching
+    ? (searchResult.data?.closed?.issueCount ?? 0)
+    : (data?.repository?.closedIssues?.totalCount ?? 0);
+
+  const issues = rawNodes.filter((i): i is NonNullable<typeof i> => i != null);
+
+  function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value === "") {
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete("query");
+        return params;
+      });
+    }
   }
 
   return (
@@ -42,36 +106,42 @@ export default function IssuesPage() {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae feugiat justo
           </p>
         </div>
-        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
-          <p className="text-sm">THE SEARCH BAR HERE</p>
+        <div className="mb-6">
+          <IssuesSearchBar
+            onSubmit={submitSearch}
+            defaultValue={searchParams}
+            clearSearchIfEmpty={clearSearchIfEmpty}
+          />
         </div>
         <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
           <div className="filter-container bg-gh-bg-highlighted">
             <div className="flex px-4 py-2">
               <div className="flex gap-0">
                 <StateFilters
-                  paramState={paramState}
-                  setParams={setParams}
-                  state="open"
-                  totalCount={data?.repository?.openIssues?.totalCount}
+                  isActive={paramState === "open"}
+                  label={"open"}
+                  onClick={() => setParams("state", "open")}
+                  totalCount={totalOpenCount}
+                  loading={loading}
                 />
                 <StateFilters
-                  paramState={paramState}
-                  setParams={setParams}
-                  state="closed"
-                  totalCount={data?.repository?.closedIssues?.totalCount}
+                  label={"closed"}
+                  isActive={paramState === "closed"}
+                  onClick={() => setParams("state", "closed")}
+                  totalCount={totalClosedCount}
+                  loading={loading}
                 />
               </div>
             </div>
           </div>
 
           <div className="issues-container pt-3">
-            {loading ? (
+            {currentLoading ? (
               <IssuesListSkeleton rows={12} />
-            ) : error ? (
+            ) : currentError ? (
               <>
                 <p className="text-sm text-red-700">Connection failed</p>
-                <p className="text-sm text-red-700">{error.message}</p>
+                <p className="text-sm text-red-700">{currentError.message}</p>
                 <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
                   Retry
                 </button>
