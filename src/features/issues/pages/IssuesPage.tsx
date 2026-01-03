@@ -67,17 +67,14 @@ export default function IssuesPage() {
     });
   }
 
-  const listIssues = data?.repository?.issues?.nodes ?? [];
-  const searchIssues = searchResult.data?.search?.nodes ?? [];
+  const listNodes = data?.repository?.issues?.nodes ?? [];
+  const searchNodes = searchResult.data?.search?.nodes ?? [];
 
-  console.log("searchIssues", searchIssues);
-
-  const currentNodes = isSearching ? searchIssues : listIssues;
+  const rawNodes = isSearching ? searchNodes : listNodes;
   const currentLoading = isSearching ? searchResult.loading : loading;
   const currentError = isSearching ? searchResult.error : error;
 
-  const issues = currentNodes.filter((issue): issue is NonNullable<typeof issue> => issue !== null);
-  //const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
+  const issues = rawNodes.filter((i): i is NonNullable<typeof i> => i != null);
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
