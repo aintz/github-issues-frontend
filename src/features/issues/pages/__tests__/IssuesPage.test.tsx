@@ -285,4 +285,14 @@ describe("IssuesPage", () => {
       expect(message).toBeInTheDocument();
     });
   });
+
+  describe("Issues search bar", () => {
+    it("renders a search input with the current query from the URL");
+    it("removes 'query' from the URL when the input is cleared (by clicking the X)");
+    it("updates the URL with 'query' when a search is submitted");
+    it("preserves existing URLSearchParams when submitting a search");
+    it("Should render a list of issues matching the search query");
+    it("Should render 'No issues found' when no issues match the search query");
+    it("Should render error message when the search query fails");
+  });
 });
