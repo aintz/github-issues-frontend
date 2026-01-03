@@ -34,9 +34,13 @@ export default function IssuesPage() {
 
   useEffect(() => {
     if (!isSearching) return;
+    const baseQuery = buildIssueSearchQuery(searchParams);
+    const countQuery = buildIssueSearchQuery(searchParams, { includeState: false });
     runSearch({
       variables: {
-        query: buildIssueSearchQuery(searchParams),
+        query: baseQuery,
+        openQuery: `${countQuery} is:open`,
+        closedQuery: `${countQuery} is:closed`,
         first: 12,
         after: null,
       },
@@ -69,12 +73,20 @@ export default function IssuesPage() {
   }
 
   const listNodes = data?.repository?.issues?.nodes ?? [];
-  const searchNodes = searchResult.data?.search?.nodes ?? [];
-
+  const searchNodes = searchResult.data?.results?.nodes ?? [];
   const rawNodes = isSearching ? searchNodes : listNodes;
   const currentLoading = isSearching ? searchResult.loading : loading;
   const currentError = isSearching ? searchResult.error : error;
 
+  const totalOpenCount = isSearching
+    ? (searchResult.data?.open?.issueCount ?? 0)
+    : (data?.repository?.openIssues?.totalCount ?? 0);
+  const totalClosedCount = isSearching
+    ? (searchResult.data?.closed?.issueCount ?? 0)
+    : (data?.repository?.closedIssues?.totalCount ?? 0);
+
+  console.log("rawNodes", rawNodes);
+  console.log("total count", searchNodes);
   const issues = rawNodes.filter((i): i is NonNullable<typeof i> => i != null);
   return (
     <>
@@ -96,14 +108,14 @@ export default function IssuesPage() {
                   isActive={paramState === "open"}
                   label={"open"}
                   onClick={() => setParams("state", "open")}
-                  totalCount={data?.repository?.openIssues?.totalCount}
+                  totalCount={totalOpenCount}
                   loading={loading}
                 />
                 <StateFilters
                   label={"closed"}
                   isActive={paramState === "closed"}
                   onClick={() => setParams("state", "closed")}
-                  totalCount={data?.repository?.closedIssues?.totalCount}
+                  totalCount={totalClosedCount}
                   loading={loading}
                 />
               </div>
