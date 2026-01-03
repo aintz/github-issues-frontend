@@ -6,6 +6,7 @@ import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
 import { useEffect, useCallback } from "react";
+import IssuesSearchBar from "../components/IssuesSearchBar";
 
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -85,35 +86,7 @@ export default function IssuesPage() {
           </p>
         </div>
         <div className="mb-6">
-          <form className="relative w-full" action={submitSearch}>
-            <input
-              type="search"
-              name="query"
-              defaultValue={searchParams.get("query") ?? ""}
-              placeholder="Search issues"
-              className="border-gh-muted w-full rounded-lg border p-6 py-2 pr-10 pl-4 text-left text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="text-gh-gray bg-gh-tab-bg absolute inset-y-0 right-0 flex items-center rounded-tr-lg rounded-br-lg px-3"
-              aria-label="Search"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
-                />
-              </svg>
-            </button>
-          </form>
+          <IssuesSearchBar onSubmit={submitSearch} defaultValue={searchParams} />
         </div>
         <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
           <div className="filter-container bg-gh-bg-highlighted">
