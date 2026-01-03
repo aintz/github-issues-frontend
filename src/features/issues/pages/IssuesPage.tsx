@@ -10,14 +10,13 @@ import { useEffect } from "react";
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const query = (searchParams.get("query") ?? "").trim();
+  const isSearching = query.length > 0;
   const paramState = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as
     | "open"
     | "closed";
 
   const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
-
-  const query = (searchParams.get("query") ?? "").trim();
-  const isSearching = query.length > 0;
 
   const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
@@ -27,14 +26,13 @@ export default function IssuesPage() {
       first: 12,
       after: null,
     },
+    skip: isSearching,
   });
 
   const [runSearch, searchResult] = useSearchIssuesLazyQuery();
 
   useEffect(() => {
     if (!isSearching) return;
-    const q = buildIssueSearchQuery(searchParams);
-    console.log("query", q);
     runSearch({
       variables: {
         query: buildIssueSearchQuery(searchParams),
@@ -42,7 +40,7 @@ export default function IssuesPage() {
         after: null,
       },
     });
-  }, [isSearching, searchParams, currentState]);
+  }, [isSearching, searchParams, runSearch]);
 
   function setParams(label: string, param: string) {
     setSearchParams((prev) => {
