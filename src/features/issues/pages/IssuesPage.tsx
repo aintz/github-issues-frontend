@@ -33,6 +33,11 @@ export default function IssuesPage() {
     });
   }
 
+  function submitForm(formData: FormData) {
+    const query = formData.get("search-input") as string;
+    console.log("Search query:", query);
+  }
+
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
@@ -42,8 +47,36 @@ export default function IssuesPage() {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae feugiat justo
           </p>
         </div>
-        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
-          <p className="text-sm">THE SEARCH BAR HERE</p>
+        <div className="mb-6">
+          <form className="relative w-full" action={submitForm}>
+            <input
+              type="search"
+              id="issues-search"
+              name="issues-search"
+              placeholder="Search issues"
+              className="border-gh-muted w-full rounded-lg border p-6 py-2 pr-10 pl-4 text-left text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="text-gh-gray bg-gh-tab-bg absolute inset-y-0 right-0 flex items-center rounded-tr-lg rounded-br-lg px-3"
+              aria-label="Search"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
+                />
+              </svg>
+            </button>
+          </form>
         </div>
         <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
           <div className="filter-container bg-gh-bg-highlighted">
