@@ -3,6 +3,9 @@ import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
 import { useIssuesQuery, IssueState } from "../../../generated/graphql";
 import { useSearchParams } from "react-router-dom";
 import StateFilters from "../components/StateFilters";
+import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
+import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
+import { useEffect } from "react";
 
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,6 +15,9 @@ export default function IssuesPage() {
     | "closed";
 
   const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
+
+  const query = (searchParams.get("query") ?? "").trim();
+  const isSearching = query.length > 0;
 
   const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
@@ -23,7 +29,20 @@ export default function IssuesPage() {
     },
   });
 
-  const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
+  const [runSearch, searchResult] = useSearchIssuesLazyQuery();
+
+  useEffect(() => {
+    if (!isSearching) return;
+    const q = buildIssueSearchQuery(searchParams);
+    console.log("query", q);
+    runSearch({
+      variables: {
+        query: buildIssueSearchQuery(searchParams),
+        first: 12,
+        after: null,
+      },
+    });
+  }, [isSearching, searchParams, currentState]);
 
   function setParams(label: string, param: string) {
     setSearchParams((prev) => {
@@ -33,11 +52,31 @@ export default function IssuesPage() {
     });
   }
 
-  function submitForm(formData: FormData) {
-    const query = formData.get("search-input") as string;
-    console.log("Search query:", query);
+  function submitSearch(formData: FormData) {
+    const query = formData.get("query")?.toString().trim() || "";
+
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (query) {
+        params.set("query", query);
+      } else {
+        params.delete("query");
+      }
+      return params;
+    });
   }
 
+  const listIssues = data?.repository?.issues?.nodes ?? [];
+  const searchIssues = searchResult.data?.search?.nodes ?? [];
+
+  console.log("searchIssues", searchIssues);
+
+  const currentNodes = isSearching ? searchIssues : listIssues;
+  const currentLoading = isSearching ? searchResult.loading : loading;
+  const currentError = isSearching ? searchResult.error : error;
+
+  const issues = currentNodes.filter((issue): issue is NonNullable<typeof issue> => issue !== null);
+  //const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
@@ -48,11 +87,11 @@ export default function IssuesPage() {
           </p>
         </div>
         <div className="mb-6">
-          <form className="relative w-full" action={submitForm}>
+          <form className="relative w-full" action={submitSearch}>
             <input
               type="search"
-              id="issues-search"
-              name="issues-search"
+              name="query"
+              defaultValue={searchParams.get("query") ?? ""}
               placeholder="Search issues"
               className="border-gh-muted w-full rounded-lg border p-6 py-2 pr-10 pl-4 text-left text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
@@ -69,9 +108,9 @@ export default function IssuesPage() {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
                 />
               </svg>
@@ -99,12 +138,12 @@ export default function IssuesPage() {
           </div>
 
           <div className="issues-container pt-3">
-            {loading ? (
+            {currentLoading ? (
               <IssuesListSkeleton rows={12} />
-            ) : error ? (
+            ) : currentError ? (
               <>
                 <p className="text-sm text-red-700">Connection failed</p>
-                <p className="text-sm text-red-700">{error.message}</p>
+                <p className="text-sm text-red-700">{currentError.message}</p>
                 <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
                   Retry
                 </button>
