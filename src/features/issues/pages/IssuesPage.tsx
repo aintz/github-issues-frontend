@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 export default function IssuesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,21 +42,24 @@ export default function IssuesPage() {
     });
   }, [isSearching, searchParams, runSearch]);
 
-  function setParams(label: string, param: string) {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      params.set(label, param);
-      return params;
-    });
-  }
+  const setParams = useCallback(
+    (label: string, param: string) => {
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        params.set(label, param);
+        return params;
+      });
+    },
+    [setSearchParams],
+  );
 
   function submitSearch(formData: FormData) {
-    const query = formData.get("query")?.toString().trim() || "";
+    const queryValue = formData.get("query")?.toString().trim() || "";
 
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
-      if (query) {
-        params.set("query", query);
+      if (queryValue) {
+        params.set("query", queryValue);
       } else {
         params.delete("query");
       }
