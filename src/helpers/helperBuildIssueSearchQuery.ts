@@ -1,13 +1,13 @@
 type sortParams = "created" | "updated" | "comments";
 type orderParams = "asc" | "desc";
 
-export function buildIssueSearchQuery(params: URLSearchParams) {
-  const query = params.get("q") || "";
-  if (!query) return;
+export function buildIssueSearchQuery(params: URLSearchParams): string {
+  const query = params.get("query") || "";
+  if (!query) return "";
 
   const state = (params.get("state") ?? "open").toLowerCase();
-  const sort = ((params.get("sort") ?? "created").toLowerCase() as sortParams) || "created";
-  const order = ((params.get("order") ?? "desc").toLowerCase() as orderParams) || "desc";
+  const sort = (params.get("sort") ?? "created").toLowerCase() as sortParams;
+  const order = (params.get("order") ?? "desc").toLowerCase() as orderParams;
 
   const statePrefix = state === "open" ? "state:open" : "state:closed";
   const sortPrefix = `sort:${sort}-${order}`;
