@@ -123,16 +123,18 @@ export default function IssuesPage() {
             <div className="flex px-4 py-2">
               <div className="flex gap-0">
                 <StateFilters
-                  paramState={paramState}
-                  setParams={setParams}
-                  state="open"
+                  isActive={paramState === "open"}
+                  label={"open"}
+                  onClick={() => setParams("state", "open")}
                   totalCount={data?.repository?.openIssues?.totalCount}
+                  loading={loading}
                 />
                 <StateFilters
-                  paramState={paramState}
-                  setParams={setParams}
-                  state="closed"
+                  label={"closed"}
+                  isActive={paramState === "closed"}
+                  onClick={() => setParams("state", "closed")}
                   totalCount={data?.repository?.closedIssues?.totalCount}
+                  loading={loading}
                 />
               </div>
             </div>
