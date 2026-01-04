@@ -7,18 +7,18 @@ import IssuesSearchBar from "../components/IssuesSearchBar";
 import SortDropdown from "../components/SortDropdown";
 import IssuesList from "../components/IssuesList";
 import useIssueFilters from "../hooks/useIssueFilters";
+import type { IssueFieldsFragment } from "../../../generated/graphql";
 
 export default function IssuesPage() {
   const {
-    query,
     isSearching,
     state,
     sort,
     order,
     orderBy,
     currentState,
-    setParam,
-    reset,
+    setParams,
+    setSearchParams,
     searchParams,
   } = useIssueFilters();
 
@@ -47,39 +47,34 @@ export default function IssuesPage() {
         openQuery: `${countQuery} is:open`,
         closedQuery: `${countQuery} is:closed`,
         first: 12,
-        after: null,
+        after: null, //to delete when the pagination applies?
       },
     });
   }, [isSearching, searchParams, runSearch]);
 
-  function submitSearch(formData: FormData) {
-    const queryValue = formData.get("query")?.toString().trim() || "";
+  //Data processing
 
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      if (queryValue) {
-        params.set("query", queryValue);
-      } else {
-        params.delete("query");
-      }
-      return params;
-    });
-  }
-
+  //Issues
   const listNodes = data?.repository?.issues?.nodes ?? [];
   const searchNodes = searchResult.data?.results?.nodes ?? [];
-  const rawNodes = isSearching ? searchNodes : listNodes;
+
+  const issues = (isSearching ? searchNodes : listNodes).filter(
+    (node): node is IssueFieldsFragment => {
+      return node?.__typename === "Issue";
+    },
+  );
+
+  //Loading and error
   const currentLoading = isSearching ? searchResult.loading : loading;
   const currentError = isSearching ? searchResult.error : error;
 
+  //Total counts
   const totalOpenCount = isSearching
     ? (searchResult.data?.open?.issueCount ?? 0)
     : (data?.repository?.openIssues?.totalCount ?? 0);
   const totalClosedCount = isSearching
     ? (searchResult.data?.closed?.issueCount ?? 0)
     : (data?.repository?.closedIssues?.totalCount ?? 0);
-
-  const issues = rawNodes.filter((i): i is NonNullable<typeof i> => i != null);
 
   function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value === "") {
@@ -91,13 +86,16 @@ export default function IssuesPage() {
     }
   }
 
-  function resetFilters() {
+  function submitSearch(formData: FormData) {
+    const queryValue = formData.get("query")?.toString().trim() || "";
+
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
-      params.delete("state");
-      params.delete("sort");
-      params.delete("order");
-      params.delete("query");
+      if (queryValue) {
+        params.set("query", queryValue);
+      } else {
+        params.delete("query");
+      }
       return params;
     });
   }
@@ -123,7 +121,7 @@ export default function IssuesPage() {
             <div className="flex items-center justify-between px-4 py-2">
               <div className="flex gap-0">
                 <StateFilters
-                  isActive={paramState === "open"}
+                  isActive={state === "open"}
                   label={"open"}
                   onClick={() => setParams("state", "open")}
                   totalCount={totalOpenCount}
@@ -131,25 +129,15 @@ export default function IssuesPage() {
                 />
                 <StateFilters
                   label={"closed"}
-                  isActive={paramState === "closed"}
+                  isActive={state === "closed"}
                   onClick={() => setParams("state", "closed")}
                   totalCount={totalClosedCount}
                   loading={loading}
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <SortDropdown
-                  onClick={setParams}
-                  currentSort={sortParam}
-                  currentOrder={orderParam}
-                />
-                <button
-                  onClick={resetFilters}
-                  className="text-gh-text hover:border-gh-muted hover:bg-gh-bg-highlighted rounded-md px-3 py-2 text-sm font-semibold hover:border"
-                >
-                  Clear all
-                </button>
+              <div>
+                <SortDropdown onClick={setParams} currentSort={sort} currentOrder={order} />
               </div>
             </div>
           </div>
