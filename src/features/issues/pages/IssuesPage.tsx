@@ -8,6 +8,7 @@ import SortDropdown from "../components/SortDropdown";
 import IssuesList from "../components/IssuesList";
 import useIssueFilters from "../hooks/useIssueFilters";
 import type { IssueFieldsFragment } from "../../../generated/graphql";
+import WelcomeBanner from "../components/WelcomeBanner";
 
 export default function IssuesPage() {
   const {
@@ -103,12 +104,7 @@ export default function IssuesPage() {
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
-        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
-          <h1 className="text-base">👋 Welcome to the react issues tracker!</h1>
-          <p className="text-sm">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae feugiat justo
-          </p>
-        </div>
+        <WelcomeBanner />
         <div className="mb-6">
           <IssuesSearchBar
             onSubmit={submitSearch}
