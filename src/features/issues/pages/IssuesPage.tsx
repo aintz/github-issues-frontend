@@ -6,12 +6,13 @@ import { useEffect, useState, useCallback } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
 import SortDropdown from "../components/SortDropdown";
 import IssuesList from "../components/IssuesList";
-import useIssueFilters from "../hooks/useIssueFilters";
 import type { IssueFieldsFragment } from "../../../generated/graphql";
 import WelcomeBanner from "../components/WelcomeBanner";
 import Pagination from "../components/Pagination";
+import useIssueFilters from "../hooks/useIssueFilters";
 
 export default function IssuesPage() {
+  //returns filters and setters from URL search params
   const {
     isSearching,
     state,
@@ -133,6 +134,8 @@ export default function IssuesPage() {
     setParams("page", String(currentPage - 1));
   }, [isSearching, currentPage, setParams]);
 
+  //Search handlers
+
   function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value === "") {
       setSearchParams((prev) => {
@@ -156,8 +159,6 @@ export default function IssuesPage() {
       return params;
     });
   }
-
-  console.log("current issues", issues);
 
   return (
     <>
