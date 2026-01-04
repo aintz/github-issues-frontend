@@ -10,7 +10,6 @@ export default function useIssueFilters() {
 
   const state = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as "open" | "closed";
   const currentState = state === "closed" ? IssueState.Closed : IssueState.Open;
-
   const sort = (searchParams.get("sort") ?? "created").toLowerCase();
 
   const order = (searchParams.get("order") ?? "desc").toLowerCase();
