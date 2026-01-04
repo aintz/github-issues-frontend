@@ -32,13 +32,18 @@ export default function useIssueFilters() {
       setSearchParams((prev) => {
         const params = new URLSearchParams(prev);
         params.set(label, param);
+        if (label === "state" || label === "sort" || label === "order" || label === "query") {
+          params.set("page", "1");
+        }
+
         return params;
       });
     },
     [setSearchParams],
   );
 
-  const currentPage = Number(searchParams.get("page") ?? "1");
+  const rawPage = Number(searchParams.get("page") ?? "1");
+  const currentPage = Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
 
   const setPage = useCallback(
     (page: number) => {
@@ -46,6 +51,7 @@ export default function useIssueFilters() {
     },
     [setParams],
   );
+  const signature = `${state}|${sort}|${order}|${query}`;
 
   return {
     query,
@@ -60,5 +66,6 @@ export default function useIssueFilters() {
     setSearchParams,
     currentPage,
     setPage,
+    signature,
   };
 }
