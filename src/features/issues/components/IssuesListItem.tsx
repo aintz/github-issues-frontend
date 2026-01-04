@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { formatTime } from "../../../helpers/helpersFunctions";
 import type { IssueFieldsFragment } from "../../../generated/graphql";
+import Labels from "./Labels";
 
 type IssuesListItemProps = {
   issue: IssueFieldsFragment;
@@ -17,15 +18,7 @@ export default function IssuesListItem({ issue, isLast }: IssuesListItemProps) {
             <Link to={`/issues/${issue.number}`} className="text-base font-medium">
               {issue.title}
             </Link>
-            {issue.labels.nodes.length > 0 && (
-              <div className="flex items-center gap-1">
-                {issue.labels.nodes.map((label) => (
-                  <span key={label.id} className="issue-label text-xs font-medium">
-                    {label.name}
-                  </span>
-                ))}
-              </div>
-            )}
+            <Labels labels={issue.labels.nodes} />
           </div>
           <div className="mt-1 flex gap-1">
             <p className="text-gh-gray text-xs">#{issue.number}</p>

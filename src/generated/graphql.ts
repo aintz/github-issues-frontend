@@ -36183,6 +36183,27 @@ export type IssuesQuery = { __typename?: 'Query', repository?: { __typename?: 'R
           | { __typename?: 'User', login: string }
          | null } | null> | null } } | null };
 
+export type IssueDetailQueryVariables = Exact<{
+  owner: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  number: Scalars['Int']['input'];
+}>;
+
+
+export type IssueDetailQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', issue?: { __typename?: 'Issue', id: string, number: number, title: string, body: string, bodyHTML: any, state: IssueState, createdAt: any, updatedAt: any, url: any, author?:
+        | { __typename?: 'Bot', login: string, avatarUrl: any, url: any }
+        | { __typename?: 'EnterpriseUserAccount', login: string, avatarUrl: any, url: any }
+        | { __typename?: 'Mannequin', login: string, avatarUrl: any, url: any }
+        | { __typename?: 'Organization', login: string, avatarUrl: any, url: any }
+        | { __typename?: 'User', login: string, avatarUrl: any, url: any }
+       | null, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', id: string, name: string, color: string } | null> | null } | null, reactions: { __typename?: 'ReactionConnection', totalCount: number }, comments: { __typename?: 'IssueCommentConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean }, nodes?: Array<{ __typename?: 'IssueComment', id: string, body: string, bodyHTML: any, createdAt: any, updatedAt: any, lastEditedAt?: any | null, author?:
+            | { __typename?: 'Bot', login: string, avatarUrl: any, url: any }
+            | { __typename?: 'EnterpriseUserAccount', login: string, avatarUrl: any, url: any }
+            | { __typename?: 'Mannequin', login: string, avatarUrl: any, url: any }
+            | { __typename?: 'Organization', login: string, avatarUrl: any, url: any }
+            | { __typename?: 'User', login: string, avatarUrl: any, url: any }
+           | null, reactions: { __typename?: 'ReactionConnection', totalCount: number } } | null> | null } } | null } | null };
+
 export type SearchIssuesQueryVariables = Exact<{
   query: Scalars['String']['input'];
   first: Scalars['Int']['input'];
@@ -36292,6 +36313,98 @@ export type IssuesQueryHookResult = ReturnType<typeof useIssuesQuery>;
 export type IssuesLazyQueryHookResult = ReturnType<typeof useIssuesLazyQuery>;
 export type IssuesSuspenseQueryHookResult = ReturnType<typeof useIssuesSuspenseQuery>;
 export type IssuesQueryResult = ApolloReactCommon.QueryResult<IssuesQuery, IssuesQueryVariables>;
+export const IssueDetailDocument = gql`
+    query IssueDetail($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    issue(number: $number) {
+      id
+      number
+      title
+      body
+      bodyHTML
+      state
+      createdAt
+      updatedAt
+      url
+      author {
+        login
+        avatarUrl
+        url
+      }
+      labels(first: 10) {
+        nodes {
+          id
+          name
+          color
+        }
+      }
+      reactions(content: THUMBS_UP) {
+        totalCount
+      }
+      comments(first: 20) {
+        totalCount
+        pageInfo {
+          hasNextPage
+        }
+        nodes {
+          id
+          body
+          bodyHTML
+          createdAt
+          updatedAt
+          lastEditedAt
+          author {
+            login
+            avatarUrl
+            url
+          }
+          reactions(content: THUMBS_UP) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useIssueDetailQuery__
+ *
+ * To run a query within a React component, call `useIssueDetailQuery` and pass it any options that fit your needs.
+ * When your component renders, `useIssueDetailQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useIssueDetailQuery({
+ *   variables: {
+ *      owner: // value for 'owner'
+ *      name: // value for 'name'
+ *      number: // value for 'number'
+ *   },
+ * });
+ */
+export function useIssueDetailQuery(baseOptions: ApolloReactHooks.QueryHookOptions<IssueDetailQuery, IssueDetailQueryVariables> & ({ variables: IssueDetailQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<IssueDetailQuery, IssueDetailQueryVariables>(IssueDetailDocument, options);
+      }
+export function useIssueDetailLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<IssueDetailQuery, IssueDetailQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<IssueDetailQuery, IssueDetailQueryVariables>(IssueDetailDocument, options);
+        }
+// @ts-ignore
+export function useIssueDetailSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<IssueDetailQuery, IssueDetailQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<IssueDetailQuery, IssueDetailQueryVariables>;
+export function useIssueDetailSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<IssueDetailQuery, IssueDetailQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<IssueDetailQuery | undefined, IssueDetailQueryVariables>;
+export function useIssueDetailSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<IssueDetailQuery, IssueDetailQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<IssueDetailQuery, IssueDetailQueryVariables>(IssueDetailDocument, options);
+        }
+export type IssueDetailQueryHookResult = ReturnType<typeof useIssueDetailQuery>;
+export type IssueDetailLazyQueryHookResult = ReturnType<typeof useIssueDetailLazyQuery>;
+export type IssueDetailSuspenseQueryHookResult = ReturnType<typeof useIssueDetailSuspenseQuery>;
+export type IssueDetailQueryResult = ApolloReactCommon.QueryResult<IssueDetailQuery, IssueDetailQueryVariables>;
 export const SearchIssuesDocument = gql`
     query SearchIssues($query: String!, $first: Int!, $after: String, $openQuery: String!, $closedQuery: String!) {
   open: search(query: $openQuery, type: ISSUE, first: 1) {
