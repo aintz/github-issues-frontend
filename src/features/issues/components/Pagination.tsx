@@ -1,32 +1,43 @@
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
   onNext: () => void;
   onPrev: () => void;
+  loading: boolean;
 };
 
 export default function Pagination({
   currentPage,
   totalPages,
-  onPageChange,
   onNext,
   onPrev,
+  loading,
 }: PaginationProps) {
+  const canPrev = currentPage > 1;
+  const canNext = currentPage < totalPages;
+
   return (
-    <div className="flex items-center justify-center space-x-1 py-4">
+    <div className="flex items-center justify-center gap-2 py-4">
       <button
         onClick={onPrev}
-        disabled={currentPage === 1}
-        className="px-3 py-1 text-sm font-medium text-gray-500 hover:text-blue-600 disabled:opacity-50"
+        disabled={!canPrev || loading}
+        className="px-3 py-1 text-sm font-medium text-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         &lt; Previous
       </button>
 
+      {loading ? (
+        <p className="text-sm">Page {currentPage}</p>
+      ) : (
+        <p className="text-sm">
+          Page {currentPage} of {totalPages}
+        </p>
+      )}
+
       <button
         onClick={onNext}
-        disabled={currentPage === totalPages}
-        className="px-3 py-1 text-sm font-medium text-gray-500 hover:text-blue-600 disabled:opacity-50"
+        disabled={!canNext || loading}
+        className="px-3 py-1 text-sm font-medium text-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Next &gt;
       </button>

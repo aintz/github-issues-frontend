@@ -27,25 +27,40 @@ export default function IssuesPage() {
     signature,
   } = useIssueFilters();
 
+  //cursor for list pagination
   const [cursorByPage, setCursorByPage] = useState<Record<number, string | null>>({ 1: null });
+  //cursor for search pagination
+  const [searchCursorByPage, setSearchCursorByPage] = useState<Record<number, string | null>>({
+    1: null,
+  });
 
+  //Reset cursors on filter change
   useEffect(() => {
     setCursorByPage({ 1: null });
+    setSearchCursorByPage({ 1: null });
     setParams("page", "1");
   }, [signature]);
 
   //List query
-  const after = currentPage === 1 ? null : (cursorByPage[currentPage] ?? null);
+  const after =
+    currentPage === 1
+      ? null
+      : isSearching
+        ? (searchCursorByPage[currentPage] ?? null)
+        : (cursorByPage[currentPage] ?? null);
 
+  //If searching and no cursor for the current page, reset to page 1
   useEffect(() => {
-    if (!isSearching) return;
     if (currentPage === 1) return;
-    if (!cursorByPage[currentPage]) {
+    if (!isSearching && !cursorByPage[currentPage]) {
+      setParams("page", "1");
+    }
+    if (isSearching && !searchCursorByPage[currentPage]) {
       setParams("page", "1");
     }
   }, [isSearching, currentPage, cursorByPage, setParams]);
 
-  const { data, loading, error, refetch, fetchMore } = useIssuesQuery({
+  const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
       owner: "facebook",
       name: "react",
@@ -61,6 +76,7 @@ export default function IssuesPage() {
   //Search query
   const [runSearch, searchResult] = useSearchIssuesLazyQuery();
 
+  //Rerun search on filter change
   useEffect(() => {
     if (!isSearching) return;
     const countQuery = buildIssueSearchQuery(searchParams, { includeState: false });
@@ -110,6 +126,7 @@ export default function IssuesPage() {
   const hasNextPage = pageInfo?.hasNextPage ?? false;
   const endCursor = pageInfo?.endCursor ?? null;
 
+  //Set cursor for next page (for the list)
   useEffect(() => {
     if (isSearching) return;
     if (!hasNextPage || !endCursor) return;
@@ -121,15 +138,25 @@ export default function IssuesPage() {
     });
   }, [isSearching, hasNextPage, endCursor, currentPage]);
 
+  //Set cursor for next page (for the search)
+  useEffect(() => {
+    if (!isSearching) return;
+    if (!hasNextPage || !endCursor) return;
+
+    setSearchCursorByPage((prev) => {
+      const nextPage = currentPage + 1;
+      if (prev[nextPage] === endCursor) return prev;
+      return { ...prev, [nextPage]: endCursor };
+    });
+  }, [isSearching, hasNextPage, endCursor, currentPage]);
+
   const handleNextPage = useCallback(() => {
-    if (isSearching) return;
     if (!hasNextPage || !endCursor) return;
 
     setParams("page", String(currentPage + 1));
   }, [isSearching, hasNextPage, endCursor, currentPage, setParams]);
 
   const handlePreviousPage = useCallback(() => {
-    if (isSearching) return;
     if (currentPage <= 1) return;
     setParams("page", String(currentPage - 1));
   }, [isSearching, currentPage, setParams]);
@@ -209,9 +236,9 @@ export default function IssuesPage() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={(page) => setParams("page", page.toString())}
           onNext={handleNextPage}
           onPrev={handlePreviousPage}
+          loading={currentLoading}
         />
       </div>
     </>
