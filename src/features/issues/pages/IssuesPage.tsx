@@ -1,42 +1,28 @@
-import IssuesListItem from "../components/IssuesListItem";
-import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
-import {
-  useIssuesQuery,
-  IssueState,
-  IssueOrderField,
-  OrderDirection,
-} from "../../../generated/graphql";
-import { useSearchParams } from "react-router-dom";
+import { useIssuesQuery } from "../../../generated/graphql";
 import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
 import SortDropdown from "../components/SortDropdown";
+import IssuesList from "../components/IssuesList";
+import useIssueFilters from "../hooks/useIssueFilters";
 
 export default function IssuesPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    query,
+    isSearching,
+    state,
+    sort,
+    order,
+    orderBy,
+    currentState,
+    setParam,
+    reset,
+    searchParams,
+  } = useIssueFilters();
 
-  const query = (searchParams.get("query") ?? "").trim();
-  const isSearching = query.length > 0;
-  const paramState = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as
-    | "open"
-    | "closed";
-
-  const orderParam = (searchParams.get("order") ?? "desc").toLowerCase();
-  const sortParam = (searchParams.get("sort") ?? "created").toLowerCase();
-
-  const orderBy = {
-    field:
-      sortParam === "created"
-        ? IssueOrderField.CreatedAt
-        : sortParam === "comments"
-          ? IssueOrderField.Comments
-          : IssueOrderField.UpdatedAt,
-    direction: orderParam === "asc" ? OrderDirection.Asc : OrderDirection.Desc,
-  };
-  const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
-
+  //List query
   const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
       owner: "facebook",
@@ -49,15 +35,15 @@ export default function IssuesPage() {
     skip: isSearching,
   });
 
+  //Search query
   const [runSearch, searchResult] = useSearchIssuesLazyQuery();
 
   useEffect(() => {
     if (!isSearching) return;
-    const baseQuery = buildIssueSearchQuery(searchParams);
     const countQuery = buildIssueSearchQuery(searchParams, { includeState: false });
     runSearch({
       variables: {
-        query: baseQuery,
+        query: buildIssueSearchQuery(searchParams),
         openQuery: `${countQuery} is:open`,
         closedQuery: `${countQuery} is:closed`,
         first: 12,
@@ -65,17 +51,6 @@ export default function IssuesPage() {
       },
     });
   }, [isSearching, searchParams, runSearch]);
-
-  const setParams = useCallback(
-    (label: string, param: string) => {
-      setSearchParams((prev) => {
-        const params = new URLSearchParams(prev);
-        params.set(label, param);
-        return params;
-      });
-    },
-    [setSearchParams],
-  );
 
   function submitSearch(formData: FormData) {
     const queryValue = formData.get("query")?.toString().trim() || "";
@@ -180,36 +155,12 @@ export default function IssuesPage() {
           </div>
 
           <div className="issues-container pt-3">
-            {currentLoading ? (
-              <IssuesListSkeleton rows={12} />
-            ) : currentError ? (
-              <>
-                <p className="text-sm text-red-700">Connection failed</p>
-                <p className="text-sm text-red-700">{currentError.message}</p>
-                <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
-                  Retry
-                </button>
-              </>
-            ) : (
-              <div className="issues-list-container">
-                {issues && issues?.length > 0 ? (
-                  <ul>
-                    {issues.map(
-                      (issue, index) =>
-                        issue && (
-                          <IssuesListItem
-                            key={issue.id}
-                            issue={issue}
-                            isLast={index === issues.length - 1}
-                          />
-                        ),
-                    )}
-                  </ul>
-                ) : (
-                  <p className="text-gh p-6 text-center text-sm">No issues found</p>
-                )}
-              </div>
-            )}
+            <IssuesList
+              loading={currentLoading}
+              error={currentError}
+              refetch={isSearching ? searchResult.refetch : refetch}
+              issues={issues}
+            />
           </div>
         </div>
       </div>
