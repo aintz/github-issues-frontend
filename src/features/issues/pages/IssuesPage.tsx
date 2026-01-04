@@ -2,13 +2,14 @@ import { useIssuesQuery } from "../../../generated/graphql";
 import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
 import SortDropdown from "../components/SortDropdown";
 import IssuesList from "../components/IssuesList";
 import useIssueFilters from "../hooks/useIssueFilters";
 import type { IssueFieldsFragment } from "../../../generated/graphql";
 import WelcomeBanner from "../components/WelcomeBanner";
+import Pagination from "../components/Pagination";
 
 export default function IssuesPage() {
   const {
@@ -22,20 +23,38 @@ export default function IssuesPage() {
     setSearchParams,
     searchParams,
     currentPage,
-    setPage,
+    signature,
   } = useIssueFilters();
 
+  const [cursorByPage, setCursorByPage] = useState<Record<number, string | null>>({ 1: null });
+
+  useEffect(() => {
+    setCursorByPage({ 1: null });
+    setParams("page", "1");
+  }, [signature]);
+
   //List query
-  const { data, loading, error, refetch } = useIssuesQuery({
+  const after = currentPage === 1 ? null : (cursorByPage[currentPage] ?? null);
+
+  useEffect(() => {
+    if (!isSearching) return;
+    if (currentPage === 1) return;
+    if (!cursorByPage[currentPage]) {
+      setParams("page", "1");
+    }
+  }, [isSearching, currentPage, cursorByPage, setParams]);
+
+  const { data, loading, error, refetch, fetchMore } = useIssuesQuery({
     variables: {
       owner: "facebook",
       name: "react",
       states: [currentState],
       first: 12,
-      after: null,
-      orderBy: orderBy,
+      after,
+      orderBy,
     },
     skip: isSearching,
+    notifyOnNetworkStatusChange: true,
   });
 
   //Search query
@@ -50,7 +69,7 @@ export default function IssuesPage() {
         openQuery: `${countQuery} is:open`,
         closedQuery: `${countQuery} is:closed`,
         first: 12,
-        after: null, //to delete when the pagination applies?
+        after,
       },
     });
   }, [isSearching, searchParams, runSearch]);
@@ -87,6 +106,32 @@ export default function IssuesPage() {
     ? searchResult.data?.results?.pageInfo
     : data?.repository?.issues?.pageInfo;
   const totalPages = Math.ceil(totalIssues / 12);
+  const hasNextPage = pageInfo?.hasNextPage ?? false;
+  const endCursor = pageInfo?.endCursor ?? null;
+
+  useEffect(() => {
+    if (isSearching) return;
+    if (!hasNextPage || !endCursor) return;
+
+    setCursorByPage((prev) => {
+      const nextPage = currentPage + 1;
+      if (prev[nextPage] === endCursor) return prev;
+      return { ...prev, [nextPage]: endCursor };
+    });
+  }, [isSearching, hasNextPage, endCursor, currentPage]);
+
+  const handleNextPage = useCallback(() => {
+    if (isSearching) return;
+    if (!hasNextPage || !endCursor) return;
+
+    setParams("page", String(currentPage + 1));
+  }, [isSearching, hasNextPage, endCursor, currentPage, setParams]);
+
+  const handlePreviousPage = useCallback(() => {
+    if (isSearching) return;
+    if (currentPage <= 1) return;
+    setParams("page", String(currentPage - 1));
+  }, [isSearching, currentPage, setParams]);
 
   function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value === "") {
@@ -111,6 +156,8 @@ export default function IssuesPage() {
       return params;
     });
   }
+
+  console.log("current issues", issues);
 
   return (
     <>
@@ -158,6 +205,13 @@ export default function IssuesPage() {
             />
           </div>
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setParams("page", page.toString())}
+          onNext={handleNextPage}
+          onPrev={handlePreviousPage}
+        />
       </div>
     </>
   );
