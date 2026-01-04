@@ -21,6 +21,8 @@ export default function IssuesPage() {
     setParams,
     setSearchParams,
     searchParams,
+    currentPage,
+    setPage,
   } = useIssueFilters();
 
   //List query
@@ -64,6 +66,9 @@ export default function IssuesPage() {
       return node?.__typename === "Issue";
     },
   );
+  const totalIssues = isSearching
+    ? (searchResult.data?.results?.issueCount ?? 0)
+    : (data?.repository?.issues?.totalCount ?? 0);
 
   //Loading and error
   const currentLoading = isSearching ? searchResult.loading : loading;
@@ -76,6 +81,12 @@ export default function IssuesPage() {
   const totalClosedCount = isSearching
     ? (searchResult.data?.closed?.issueCount ?? 0)
     : (data?.repository?.closedIssues?.totalCount ?? 0);
+
+  //Pagination
+  const pageInfo = isSearching
+    ? searchResult.data?.results?.pageInfo
+    : data?.repository?.issues?.pageInfo;
+  const totalPages = Math.ceil(totalIssues / 12);
 
   function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value === "") {
