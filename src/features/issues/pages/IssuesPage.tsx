@@ -116,6 +116,17 @@ export default function IssuesPage() {
     }
   }
 
+  function resetFilters() {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.delete("state");
+      params.delete("sort");
+      params.delete("order");
+      params.delete("query");
+      return params;
+    });
+  }
+
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
@@ -151,12 +162,19 @@ export default function IssuesPage() {
                   loading={loading}
                 />
               </div>
-              <div>
+
+              <div className="flex items-center gap-2">
                 <SortDropdown
                   onClick={setParams}
                   currentSort={sortParam}
                   currentOrder={orderParam}
                 />
+                <button
+                  onClick={resetFilters}
+                  className="text-gh-text hover:border-gh-muted hover:bg-gh-bg-highlighted rounded-md px-3 py-2 text-sm font-semibold hover:border"
+                >
+                  Clear all
+                </button>
               </div>
             </div>
           </div>
