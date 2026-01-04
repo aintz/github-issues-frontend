@@ -1,41 +1,64 @@
-import IssuesListItem from "../components/IssuesListItem";
-import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
-import {
-  useIssuesQuery,
-  IssueState,
-  IssueOrderField,
-  OrderDirection,
-} from "../../../generated/graphql";
-import { useSearchParams } from "react-router-dom";
+import { useIssuesQuery } from "../../../generated/graphql";
 import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
-import { useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
 import SortDropdown from "../components/SortDropdown";
+import IssuesList from "../components/IssuesList";
+import type { IssueFieldsFragment } from "../../../generated/graphql";
+import WelcomeBanner from "../components/WelcomeBanner";
+import Pagination from "../components/Pagination";
+import useIssueFilters from "../hooks/useIssueFilters";
 
 export default function IssuesPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  //returns filters and setters from URL search params
+  const {
+    isSearching,
+    state,
+    sort,
+    order,
+    orderBy,
+    currentState,
+    setParams,
+    setSearchParams,
+    searchParams,
+    currentPage,
+    signature,
+  } = useIssueFilters();
 
-  const query = (searchParams.get("query") ?? "").trim();
-  const isSearching = query.length > 0;
-  const paramState = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as
-    | "open"
-    | "closed";
+  //cursor for list pagination
+  const [cursorByPage, setCursorByPage] = useState<Record<number, string | null>>({ 1: null });
+  //cursor for search pagination
+  const [searchCursorByPage, setSearchCursorByPage] = useState<Record<number, string | null>>({
+    1: null,
+  });
 
-  const orderParam = (searchParams.get("order") ?? "desc").toLowerCase();
-  const sortParam = (searchParams.get("sort") ?? "created").toLowerCase();
+  //Reset cursors on filter change
+  useEffect(() => {
+    setCursorByPage({ 1: null });
+    setSearchCursorByPage({ 1: null });
+    setParams("page", "1");
+  }, [signature]);
 
-  const orderBy = {
-    field:
-      sortParam === "created"
-        ? IssueOrderField.CreatedAt
-        : sortParam === "comments"
-          ? IssueOrderField.Comments
-          : IssueOrderField.UpdatedAt,
-    direction: orderParam === "asc" ? OrderDirection.Asc : OrderDirection.Desc,
-  };
-  const currentState = paramState === "closed" ? IssueState.Closed : IssueState.Open; // we need to do this because of the enum of the state
+  //List query
+  const after =
+    currentPage === 1
+      ? null
+      : isSearching
+        ? (searchCursorByPage[currentPage] ?? null)
+        : (cursorByPage[currentPage] ?? null);
+
+  //If searching and no cursor for the current page, reset to page 1
+  useEffect(() => {
+    if (currentPage === 1) return;
+    if (!isSearching && !cursorByPage[currentPage]) {
+      setParams("page", "1");
+    }
+    if (isSearching && !searchCursorByPage[currentPage]) {
+      setParams("page", "1");
+    }
+  }, [isSearching, currentPage, cursorByPage, setParams]);
 
   const { data, loading, error, refetch } = useIssuesQuery({
     variables: {
@@ -43,39 +66,112 @@ export default function IssuesPage() {
       name: "react",
       states: [currentState],
       first: 12,
-      after: null,
-      orderBy: orderBy,
+      after,
+      orderBy,
     },
     skip: isSearching,
+    notifyOnNetworkStatusChange: true,
   });
 
+  //Search query
   const [runSearch, searchResult] = useSearchIssuesLazyQuery();
 
+  //Rerun search on filter change
   useEffect(() => {
     if (!isSearching) return;
-    const baseQuery = buildIssueSearchQuery(searchParams);
     const countQuery = buildIssueSearchQuery(searchParams, { includeState: false });
     runSearch({
       variables: {
-        query: baseQuery,
+        query: buildIssueSearchQuery(searchParams),
         openQuery: `${countQuery} is:open`,
         closedQuery: `${countQuery} is:closed`,
         first: 12,
-        after: null,
+        after,
       },
     });
   }, [isSearching, searchParams, runSearch]);
 
-  const setParams = useCallback(
-    (label: string, param: string) => {
+  //Data processing
+
+  //Issues
+  const listNodes = data?.repository?.issues?.nodes ?? [];
+  const searchNodes = searchResult.data?.results?.nodes ?? [];
+
+  const issues = (isSearching ? searchNodes : listNodes).filter(
+    (node): node is IssueFieldsFragment => {
+      return node?.__typename === "Issue";
+    },
+  );
+  const totalIssues = isSearching
+    ? (searchResult.data?.results?.issueCount ?? 0)
+    : (data?.repository?.issues?.totalCount ?? 0);
+
+  //Loading and error
+  const currentLoading = isSearching ? searchResult.loading : loading;
+  const currentError = isSearching ? searchResult.error : error;
+
+  //Total counts
+  const totalOpenCount = isSearching
+    ? (searchResult.data?.open?.issueCount ?? 0)
+    : (data?.repository?.openIssues?.totalCount ?? 0);
+  const totalClosedCount = isSearching
+    ? (searchResult.data?.closed?.issueCount ?? 0)
+    : (data?.repository?.closedIssues?.totalCount ?? 0);
+
+  //Pagination
+  const pageInfo = isSearching
+    ? searchResult.data?.results?.pageInfo
+    : data?.repository?.issues?.pageInfo;
+  const totalPages = Math.ceil(totalIssues / 12);
+  const hasNextPage = pageInfo?.hasNextPage ?? false;
+  const endCursor = pageInfo?.endCursor ?? null;
+
+  //Set cursor for next page (for the list)
+  useEffect(() => {
+    if (isSearching) return;
+    if (!hasNextPage || !endCursor) return;
+
+    setCursorByPage((prev) => {
+      const nextPage = currentPage + 1;
+      if (prev[nextPage] === endCursor) return prev;
+      return { ...prev, [nextPage]: endCursor };
+    });
+  }, [isSearching, hasNextPage, endCursor, currentPage]);
+
+  //Set cursor for next page (for the search)
+  useEffect(() => {
+    if (!isSearching) return;
+    if (!hasNextPage || !endCursor) return;
+
+    setSearchCursorByPage((prev) => {
+      const nextPage = currentPage + 1;
+      if (prev[nextPage] === endCursor) return prev;
+      return { ...prev, [nextPage]: endCursor };
+    });
+  }, [isSearching, hasNextPage, endCursor, currentPage]);
+
+  const handleNextPage = useCallback(() => {
+    if (!hasNextPage || !endCursor) return;
+
+    setParams("page", String(currentPage + 1));
+  }, [isSearching, hasNextPage, endCursor, currentPage, setParams]);
+
+  const handlePreviousPage = useCallback(() => {
+    if (currentPage <= 1) return;
+    setParams("page", String(currentPage - 1));
+  }, [isSearching, currentPage, setParams]);
+
+  //Search handlers
+
+  function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value === "") {
       setSearchParams((prev) => {
         const params = new URLSearchParams(prev);
-        params.set(label, param);
+        params.delete("query");
         return params;
       });
-    },
-    [setSearchParams],
-  );
+    }
+  }
 
   function submitSearch(formData: FormData) {
     const queryValue = formData.get("query")?.toString().trim() || "";
@@ -91,51 +187,10 @@ export default function IssuesPage() {
     });
   }
 
-  const listNodes = data?.repository?.issues?.nodes ?? [];
-  const searchNodes = searchResult.data?.results?.nodes ?? [];
-  const rawNodes = isSearching ? searchNodes : listNodes;
-  const currentLoading = isSearching ? searchResult.loading : loading;
-  const currentError = isSearching ? searchResult.error : error;
-
-  const totalOpenCount = isSearching
-    ? (searchResult.data?.open?.issueCount ?? 0)
-    : (data?.repository?.openIssues?.totalCount ?? 0);
-  const totalClosedCount = isSearching
-    ? (searchResult.data?.closed?.issueCount ?? 0)
-    : (data?.repository?.closedIssues?.totalCount ?? 0);
-
-  const issues = rawNodes.filter((i): i is NonNullable<typeof i> => i != null);
-
-  function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value === "") {
-      setSearchParams((prev) => {
-        const params = new URLSearchParams(prev);
-        params.delete("query");
-        return params;
-      });
-    }
-  }
-
-  function resetFilters() {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      params.delete("state");
-      params.delete("sort");
-      params.delete("order");
-      params.delete("query");
-      return params;
-    });
-  }
-
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
-        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
-          <h1 className="text-base">👋 Welcome to the react issues tracker!</h1>
-          <p className="text-sm">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae feugiat justo
-          </p>
-        </div>
+        <WelcomeBanner />
         <div className="mb-6">
           <IssuesSearchBar
             onSubmit={submitSearch}
@@ -148,7 +203,7 @@ export default function IssuesPage() {
             <div className="flex items-center justify-between px-4 py-2">
               <div className="flex gap-0">
                 <StateFilters
-                  isActive={paramState === "open"}
+                  isActive={state === "open"}
                   label={"open"}
                   onClick={() => setParams("state", "open")}
                   totalCount={totalOpenCount}
@@ -156,62 +211,35 @@ export default function IssuesPage() {
                 />
                 <StateFilters
                   label={"closed"}
-                  isActive={paramState === "closed"}
+                  isActive={state === "closed"}
                   onClick={() => setParams("state", "closed")}
                   totalCount={totalClosedCount}
                   loading={loading}
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <SortDropdown
-                  onClick={setParams}
-                  currentSort={sortParam}
-                  currentOrder={orderParam}
-                />
-                <button
-                  onClick={resetFilters}
-                  className="text-gh-text hover:border-gh-muted hover:bg-gh-bg-highlighted rounded-md px-3 py-2 text-sm font-semibold hover:border"
-                >
-                  Clear all
-                </button>
+              <div>
+                <SortDropdown onClick={setParams} currentSort={sort} currentOrder={order} />
               </div>
             </div>
           </div>
 
           <div className="issues-container pt-3">
-            {currentLoading ? (
-              <IssuesListSkeleton rows={12} />
-            ) : currentError ? (
-              <>
-                <p className="text-sm text-red-700">Connection failed</p>
-                <p className="text-sm text-red-700">{currentError.message}</p>
-                <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
-                  Retry
-                </button>
-              </>
-            ) : (
-              <div className="issues-list-container">
-                {issues && issues?.length > 0 ? (
-                  <ul>
-                    {issues.map(
-                      (issue, index) =>
-                        issue && (
-                          <IssuesListItem
-                            key={issue.id}
-                            issue={issue}
-                            isLast={index === issues.length - 1}
-                          />
-                        ),
-                    )}
-                  </ul>
-                ) : (
-                  <p className="text-gh-muted p-6 text-center text-sm">No issues found</p>
-                )}
-              </div>
-            )}
+            <IssuesList
+              loading={currentLoading}
+              error={currentError}
+              refetch={isSearching ? searchResult.refetch : refetch}
+              issues={issues}
+            />
           </div>
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNext={handleNextPage}
+          onPrev={handlePreviousPage}
+          loading={currentLoading}
+        />
       </div>
     </>
   );

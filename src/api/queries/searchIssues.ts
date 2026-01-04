@@ -7,6 +7,8 @@ export const SEARCH_ISSUES_QUERY = gql`
     $query: String!
     $first: Int!
     $after: String
+    $last: Int
+    $before: String
     $openQuery: String!
     $closedQuery: String!
   ) {
@@ -17,11 +19,20 @@ export const SEARCH_ISSUES_QUERY = gql`
       issueCount
     }
 
-    results: search(query: $query, type: ISSUE, first: $first, after: $after) {
+    results: search(
+      query: $query
+      type: ISSUE
+      first: $first
+      last: $last
+      after: $after
+      before: $before
+    ) {
       issueCount
       pageInfo {
         endCursor
         hasNextPage
+        startCursor
+        hasPreviousPage
       }
       nodes {
         ... on Issue {

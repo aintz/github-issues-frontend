@@ -36169,13 +36169,15 @@ export type IssuesQueryVariables = Exact<{
   owner: Scalars['String']['input'];
   name: Scalars['String']['input'];
   states?: InputMaybe<Array<IssueState> | IssueState>;
-  first: Scalars['Int']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
   orderBy?: InputMaybe<IssueOrder>;
 }>;
 
 
-export type IssuesQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', id: string, openIssues: { __typename?: 'IssueConnection', totalCount: number }, closedIssues: { __typename?: 'IssueConnection', totalCount: number }, issues: { __typename?: 'IssueConnection', totalCount: number, nodes?: Array<{ __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, createdAt: any, updatedAt: any, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', id: string, name: string, color: string } | null> | null } | null, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
+export type IssuesQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', id: string, openIssues: { __typename?: 'IssueConnection', totalCount: number }, closedIssues: { __typename?: 'IssueConnection', totalCount: number }, issues: { __typename?: 'IssueConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null, hasPreviousPage: boolean, startCursor?: string | null }, nodes?: Array<{ __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, createdAt: any, updatedAt: any, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', id: string, name: string, color: string } | null> | null } | null, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
           | { __typename?: 'Bot', login: string }
           | { __typename?: 'EnterpriseUserAccount', login: string }
           | { __typename?: 'Mannequin', login: string }
@@ -36208,12 +36210,14 @@ export type SearchIssuesQueryVariables = Exact<{
   query: Scalars['String']['input'];
   first: Scalars['Int']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
   openQuery: Scalars['String']['input'];
   closedQuery: Scalars['String']['input'];
 }>;
 
 
-export type SearchIssuesQuery = { __typename?: 'Query', open: { __typename?: 'SearchResultItemConnection', issueCount: number }, closed: { __typename?: 'SearchResultItemConnection', issueCount: number }, results: { __typename?: 'SearchResultItemConnection', issueCount: number, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes?: Array<
+export type SearchIssuesQuery = { __typename?: 'Query', open: { __typename?: 'SearchResultItemConnection', issueCount: number }, closed: { __typename?: 'SearchResultItemConnection', issueCount: number }, results: { __typename?: 'SearchResultItemConnection', issueCount: number, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, startCursor?: string | null, hasPreviousPage: boolean }, nodes?: Array<
       | { __typename?: 'App' }
       | { __typename?: 'Discussion' }
       | { __typename?: 'Issue', id: string, number: number, title: string, state: IssueState, createdAt: any, updatedAt: any, labels?: { __typename?: 'LabelConnection', nodes?: Array<{ __typename?: 'Label', name: string, color: string } | null> | null } | null, comments: { __typename?: 'IssueCommentConnection', totalCount: number }, author?:
@@ -36247,7 +36251,7 @@ export const IssueFieldsFragmentDoc = gql`
 }
     `;
 export const IssuesDocument = gql`
-    query Issues($owner: String!, $name: String!, $states: [IssueState!], $first: Int!, $after: String, $orderBy: IssueOrder = {field: UPDATED_AT, direction: DESC}) {
+    query Issues($owner: String!, $name: String!, $states: [IssueState!], $first: Int, $last: Int, $after: String, $before: String, $orderBy: IssueOrder = {field: UPDATED_AT, direction: DESC}) {
   repository(owner: $owner, name: $name) {
     id
     openIssues: issues(states: [OPEN]) {
@@ -36256,8 +36260,21 @@ export const IssuesDocument = gql`
     closedIssues: issues(states: [CLOSED]) {
       totalCount
     }
-    issues(first: $first, after: $after, states: $states, orderBy: $orderBy) {
+    issues(
+      first: $first
+      last: $last
+      after: $after
+      before: $before
+      states: $states
+      orderBy: $orderBy
+    ) {
       totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+        hasPreviousPage
+        startCursor
+      }
       nodes {
         ...IssueFields
         labels(first: 5) {
@@ -36289,7 +36306,9 @@ export const IssuesDocument = gql`
  *      name: // value for 'name'
  *      states: // value for 'states'
  *      first: // value for 'first'
+ *      last: // value for 'last'
  *      after: // value for 'after'
+ *      before: // value for 'before'
  *      orderBy: // value for 'orderBy'
  *   },
  * });
@@ -36406,18 +36425,27 @@ export type IssueDetailLazyQueryHookResult = ReturnType<typeof useIssueDetailLaz
 export type IssueDetailSuspenseQueryHookResult = ReturnType<typeof useIssueDetailSuspenseQuery>;
 export type IssueDetailQueryResult = ApolloReactCommon.QueryResult<IssueDetailQuery, IssueDetailQueryVariables>;
 export const SearchIssuesDocument = gql`
-    query SearchIssues($query: String!, $first: Int!, $after: String, $openQuery: String!, $closedQuery: String!) {
+    query SearchIssues($query: String!, $first: Int!, $after: String, $last: Int, $before: String, $openQuery: String!, $closedQuery: String!) {
   open: search(query: $openQuery, type: ISSUE, first: 1) {
     issueCount
   }
   closed: search(query: $closedQuery, type: ISSUE, first: 1) {
     issueCount
   }
-  results: search(query: $query, type: ISSUE, first: $first, after: $after) {
+  results: search(
+    query: $query
+    type: ISSUE
+    first: $first
+    last: $last
+    after: $after
+    before: $before
+  ) {
     issueCount
     pageInfo {
       endCursor
       hasNextPage
+      startCursor
+      hasPreviousPage
     }
     nodes {
       ... on Issue {
@@ -36449,6 +36477,8 @@ export const SearchIssuesDocument = gql`
  *      query: // value for 'query'
  *      first: // value for 'first'
  *      after: // value for 'after'
+ *      last: // value for 'last'
+ *      before: // value for 'before'
  *      openQuery: // value for 'openQuery'
  *      closedQuery: // value for 'closedQuery'
  *   },
