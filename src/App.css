@@ -47,7 +47,8 @@
     border-radius: 13px;
   }
 
-  button:hover {
+  button:hover,
+  li:hover {
     background-color: #252b34;
     border-radius: 6px;
     cursor: pointer;

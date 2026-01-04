@@ -295,4 +295,10 @@ describe("IssuesPage", () => {
     it("Should render 'No issues found' when no issues match the search query");
     it("Should render error message when the search query fails");
   });
+
+  describe("Issues sorting and ordering", () => {
+    it("Should render sort and order dropdowns with the current values from the URL");
+    it("Should updates the URL when a new sort option is selected");
+    it("Should updates the URL when a new order option is selected");
+  });
 });
