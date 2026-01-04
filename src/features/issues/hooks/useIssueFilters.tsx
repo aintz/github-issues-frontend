@@ -9,9 +9,11 @@ export default function useIssueFilters() {
   const isSearching = query.length > 0;
 
   const state = (searchParams.get("state")?.toLocaleLowerCase() ?? "open") as "open" | "closed";
-  const order = (searchParams.get("order") ?? "desc").toLowerCase();
+  const currentState = state === "closed" ? IssueState.Closed : IssueState.Open;
+
   const sort = (searchParams.get("sort") ?? "created").toLowerCase();
 
+  const order = (searchParams.get("order") ?? "desc").toLowerCase();
   const orderBy = useMemo(
     () => ({
       field:
@@ -25,8 +27,6 @@ export default function useIssueFilters() {
     [sort, order],
   );
 
-  const currentState = state === "closed" ? IssueState.Closed : IssueState.Open;
-
   const setParams = useCallback(
     (label: string, param: string) => {
       setSearchParams((prev) => {
@@ -36,6 +36,15 @@ export default function useIssueFilters() {
       });
     },
     [setSearchParams],
+  );
+
+  const currentPage = Number(searchParams.get("page") ?? "1");
+
+  const setPage = useCallback(
+    (page: number) => {
+      setParams("page", page.toString());
+    },
+    [setParams],
   );
 
   return {
@@ -49,5 +58,7 @@ export default function useIssueFilters() {
     setParams,
     searchParams,
     setSearchParams,
+    currentPage,
+    setPage,
   };
 }
