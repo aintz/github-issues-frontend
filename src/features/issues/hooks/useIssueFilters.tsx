@@ -38,5 +38,16 @@ export default function useIssueFilters() {
     [setSearchParams],
   );
 
-  return { query, isSearching, state, sort, order, orderBy, currentState, setParams, searchParams };
+  return {
+    query,
+    isSearching,
+    state,
+    sort,
+    order,
+    orderBy,
+    currentState,
+    setParams,
+    searchParams,
+    setSearchParams,
+  };
 }
