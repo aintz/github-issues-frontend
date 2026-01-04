@@ -7,8 +7,10 @@ export const REPO_ISSUES_QUERY = gql`
     $owner: String!
     $name: String!
     $states: [IssueState!]
-    $first: Int!
+    $first: Int
+    $last: Int
     $after: String
+    $before: String
     $orderBy: IssueOrder = { field: UPDATED_AT, direction: DESC }
   ) {
     repository(owner: $owner, name: $name) {
@@ -19,8 +21,21 @@ export const REPO_ISSUES_QUERY = gql`
       closedIssues: issues(states: [CLOSED]) {
         totalCount
       }
-      issues(first: $first, after: $after, states: $states, orderBy: $orderBy) {
+      issues(
+        first: $first
+        last: $last
+        after: $after
+        before: $before
+        states: $states
+        orderBy: $orderBy
+      ) {
         totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
         nodes {
           ...IssueFields
           labels(first: 5) {
