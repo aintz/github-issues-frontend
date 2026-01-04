@@ -9,7 +9,7 @@ export function IssuesListSkeleton({ rows = 12 }: { rows?: number }) {
         {Array.from({ length: rows }).map((_, index) => (
           <li
             key={index}
-            className={`border-gh-muted min-h-[88px] px-4 py-3 ${index === rows - 1 ? "" : "border-b"}`}
+            className={`border-gh-muted min-h-[44px] px-4 py-3 ${index === rows - 1 ? "" : "border-b"}`}
           >
             <div className="flex gap-2">
               <div className="bg-gh-border/40 mt-1 h-4 w-4 animate-pulse rounded-full" />
