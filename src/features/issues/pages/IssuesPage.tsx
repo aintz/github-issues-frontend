@@ -206,7 +206,7 @@ export default function IssuesPage() {
                     )}
                   </ul>
                 ) : (
-                  <p className="text-gh-muted p-6 text-center text-sm">No issues found</p>
+                  <p className="text-gh p-6 text-center text-sm">No issues found</p>
                 )}
               </div>
             )}
