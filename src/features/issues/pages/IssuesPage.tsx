@@ -1,69 +1,152 @@
-import IssuesListItem from "../components/IssuesListItem";
-import { IssuesListSkeleton } from "../components/IssuesListSkeleton";
-import { useIssuesQuery, IssueState } from "../../../generated/graphql";
+import { useEffect, useCallback } from "react";
+import IssuesSearchBar from "../components/IssuesSearchBar";
+import IssuesList from "../components/IssuesList";
+import WelcomeBanner from "../components/WelcomeBanner";
+import Pagination from "../components/Pagination";
+import useIssueFilters from "../hooks/useIssueFilters";
+import useListPagination from "../hooks/useListPagination";
+import useSearchPagination from "../hooks/useSearchPagination";
+import useProcessedIssuesData from "../hooks/useProcessedIssueData";
+import useSearchHandlers from "../hooks/useSearchHandlers";
+import IssuesFilterBar from "../components/IssuesFilterBar";
+import useGetIssuesData from "../hooks/useGetIssuesData";
+const ITEMS_PER_PAGE = 12;
 
 export default function IssuesPage() {
-  const { data, loading, error, refetch } = useIssuesQuery({
-    variables: {
-      owner: "facebook",
-      name: "react",
-      states: [IssueState.Open],
-      first: 12,
-      after: null,
-    },
+  //returns filters and setters from URL search params
+  const {
+    isSearching,
+    state,
+    sort,
+    order,
+    orderBy,
+    currentState,
+    setParams,
+    setSearchParams,
+    searchParams,
+    currentPage,
+    signature,
+  } = useIssueFilters();
+
+  const { cursorByPage, setCursorByPage } = useListPagination({
+    setParams,
+    isSearching,
+    currentPage,
+  });
+  const { searchCursorByPage, setSearchCursorByPage } = useSearchPagination({
+    setParams,
+    isSearching,
+    currentPage,
   });
 
-  //const totalCount = data?.repository?.issues?.totalCount ?? 0;
-  //const issues = (data?.repository?.issues?.nodes ?? []) as Issue[];
+  //Reset cursors on filter change
+  useEffect(() => {
+    setCursorByPage({ 1: null });
+    setSearchCursorByPage({ 1: null });
+    setParams("page", "1");
+  }, [signature]);
 
-  const issues = data?.repository?.issues?.nodes; //this now can be done because of codegen types
+  const previousPageReference =
+    currentPage === 1
+      ? null
+      : isSearching
+        ? (searchCursorByPage[currentPage] ?? null)
+        : (cursorByPage[currentPage] ?? null);
+
+  const { listData, listError, listLoading, refetch, searchResult } = useGetIssuesData({
+    isSearching,
+    currentState,
+    previousPageReference,
+    orderBy,
+    searchParams,
+    ITEMS_PER_PAGE,
+  });
+
+  //Data processing
+  const {
+    issues,
+    totalOpenCount,
+    totalClosedCount,
+    pageInfo,
+    totalPages,
+    currentLoading,
+    currentError,
+  } = useProcessedIssuesData({
+    isSearching,
+    listData,
+    listLoading,
+    listError,
+    searchResult,
+    itemsPerPage: ITEMS_PER_PAGE,
+  });
+
+  const hasNextPage = pageInfo?.hasNextPage ?? false;
+  const endCursor = pageInfo?.endCursor ?? null;
+
+  useEffect(() => {
+    if (!hasNextPage || !endCursor) return;
+    const cursorSetFn = isSearching ? setSearchCursorByPage : setCursorByPage;
+    const nextPage = currentPage + 1;
+
+    cursorSetFn((prev) => {
+      if (prev[nextPage] === endCursor) return prev;
+      return { ...prev, [nextPage]: endCursor };
+    });
+  }, [isSearching, hasNextPage, endCursor, currentPage]);
+
+  const { clearSearchIfEmpty, submitSearch } = useSearchHandlers(setSearchParams);
+
+  const handleNextPage = useCallback(() => {
+    if (!hasNextPage || !endCursor) return;
+
+    setParams("page", String(currentPage + 1));
+  }, [hasNextPage, endCursor, currentPage, setParams]);
+
+  const handlePreviousPage = useCallback(() => {
+    if (currentPage <= 1) return;
+    setParams("page", String(currentPage - 1));
+  }, [currentPage, setParams]);
 
   return (
     <>
       <div className="mx-auto mt-6 max-w-7xl p-4">
-        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
-          <h1 className="text-base">👋 Welcome to the react issues tracker!</h1>
-          <p className="text-sm">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae feugiat justo
-          </p>
+        <WelcomeBanner />
+        <div className="mb-6">
+          <IssuesSearchBar
+            onSubmit={submitSearch}
+            defaultValue={searchParams}
+            clearSearchIfEmpty={clearSearchIfEmpty}
+          />
         </div>
-        <div className="border-gh-muted mb-6 rounded-lg border p-6 text-center">
-          <p className="text-sm">THE SEARCH BAR HERE</p>
-        </div>
-
-        <div className="border-gh-muted mb-6 rounded-lg border text-left">
-          <div className="filter-container bg-gh-bg-highlighted">
-            <p className="text-sm">THE FILTERS HERE</p>
-            <p>open {data?.repository?.openIssues?.totalCount ?? 0}</p>
-            <p>closed {data?.repository?.closedIssues?.totalCount ?? 0}</p>
-          </div>
+        <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
+          <IssuesFilterBar
+            setParams={setParams}
+            totalOpenCount={totalOpenCount}
+            totalClosedCount={totalClosedCount}
+            currentLoading={currentLoading}
+            state={state}
+            sort={sort}
+            order={order}
+          />
 
           <div className="issues-container pt-3">
-            {loading ? (
-              <IssuesListSkeleton rows={12} />
-            ) : error ? (
-              <>
-                <p className="text-sm text-red-700">Connection failed</p>
-                <p className="text-sm text-red-700">{error.message}</p>
-                <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
-                  Retry
-                </button>
-              </>
-            ) : (
-              <div className="issues-list-container">
-                {issues && issues?.length > 0 ? (
-                  <ul>
-                    {issues.map((issue, index) => (
-                      <IssuesListItem issue={issue} isLast={index === issues.length - 1} />
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gh-muted p-6 text-center text-sm">No issues found</p>
-                )}
-              </div>
-            )}
+            <IssuesList
+              loading={currentLoading}
+              error={currentError}
+              refetch={isSearching ? searchResult.refetch : refetch}
+              issues={issues}
+            />
           </div>
         </div>
+        {totalPages > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onNext={handleNextPage}
+            onPrev={handlePreviousPage}
+            loading={currentLoading}
+          />
+        )}
       </div>
     </>
   );

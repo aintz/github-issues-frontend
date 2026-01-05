@@ -10,6 +10,8 @@
   --color-gh-bg-highlighted: #151b23;
   --color-gh-tab-bg: #252b34;
   --color-gh-gray: #9198a1;
+  --color-gh-green: #238636;
+  --color-gh-purple: #8957e5;
   --font-gh-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
@@ -36,7 +38,7 @@
   .issue-icon {
     height: 16px;
     width: 16px;
-    border: 1px solid red; /* For visualization during development */
+    border: 1px solid; /* For visualization during development */
     border-radius: 20px;
     margin-top: 5px;
   }
@@ -47,9 +49,47 @@
     border-radius: 13px;
   }
 
-  button:hover {
-    background-color: #252b34;
+  button:hover,
+  li:hover {
     border-radius: 6px;
     cursor: pointer;
+  }
+  .dropdown-list li:hover {
+    background-color: #252b34;
+  }
+
+  .github-body-content {
+    color: var(--color-gh-text);
+  }
+
+  .github-body-content p,
+  .snippet-clipboard-content,
+  .notranslate span,
+  .github-body-content li {
+    margin-bottom: 1rem;
+    font-size: 14px;
+  }
+
+  .snippet-clipboard-content {
+    background-color: #181b1f;
+    padding: 10px;
+    border-radius: 6px;
+  }
+
+  blockquote p {
+    padding: 0 1em;
+    color: var(--color-gh-gray, var(--color-gh-gray));
+    border-left: 0.25em solid var(--color-gh-gray, var(--color-gh-gray));
+  }
+
+  hr {
+    background-color: var(--color-gh-gray);
+    height: 2px;
+    margin-bottom: 1rem;
+  }
+
+  .snippet-clipboard-content {
+    overflow: auto;
+    max-width: 800px;
   }
 }

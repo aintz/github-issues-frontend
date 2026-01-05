@@ -1,6 +1,6 @@
 export default function Header() {
   return (
-    <header className="border-gh-muted bg-gh-header-bg w-full border-b px-4 pt-4">
+    <header className="border-gh-muted bg-gh-header-bg w-full border-b px-4 pt-4 pb-4">
       <div className="flex items-center gap-4">
         <svg
           height="32"
@@ -18,24 +18,6 @@ export default function Header() {
           <p className="text-gh-text text-sm font-medium">/</p>
           <p className="text-gh-text text-sm font-bold">react</p>
         </div>
-      </div>
-      <div className="gh-tab-active mt-4 flex w-min items-center gap-2 px-2 pb-3">
-        <svg
-          aria-hidden="true"
-          height="16"
-          viewBox="0 0 16 16"
-          version="1.1"
-          width="16"
-          data-view-component="true"
-          className="fill-gh-muted"
-        >
-          <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
-          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path>
-        </svg>
-        <p className="text-gh-text text-sm font-bold">Issues</p>
-        <p className="text-gh-text text-sm font-bold">
-          <span className="bg-gh-tab-bg rounded-full px-2 py-1">865</span>
-        </p>
       </div>
     </header>
   );
