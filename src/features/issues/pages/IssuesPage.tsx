@@ -1,10 +1,8 @@
 import { useIssuesQuery } from "../../../generated/graphql";
-import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
 import { useEffect, useCallback } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
-import SortDropdown from "../components/SortDropdown";
 import IssuesList from "../components/IssuesList";
 import WelcomeBanner from "../components/WelcomeBanner";
 import Pagination from "../components/Pagination";
@@ -12,7 +10,9 @@ import useIssueFilters from "../hooks/useIssueFilters";
 import useListPagination from "../hooks/useListPagination";
 import useSearchPagination from "../hooks/useSearchPagination";
 import useProcessedIssuesData from "../hooks/useProcessedIssueData";
-const ITEMS_PER_PAGE = 12;
+import useSearchHandlers from "../hooks/useSearchHandlers";
+import IssuesFilterBar from "../components/IssuesFilterBar";
+import useGetIssuesData from "../hooks/useGetIssuesData";
 
 export default function IssuesPage() {
   //returns filters and setters from URL search params
@@ -49,12 +49,14 @@ export default function IssuesPage() {
   }, [signature]);
 
   //List query
-  const after =
+  const previousPageReference =
     currentPage === 1
       ? null
       : isSearching
         ? (searchCursorByPage[currentPage] ?? null)
         : (cursorByPage[currentPage] ?? null);
+
+  const {} = useGetIssuesData();
 
   const {
     data: listData,
@@ -67,7 +69,7 @@ export default function IssuesPage() {
       name: "react",
       states: [currentState],
       first: ITEMS_PER_PAGE,
-      after,
+      after: previousPageReference,
       orderBy,
     },
     skip: isSearching,
@@ -87,16 +89,14 @@ export default function IssuesPage() {
         openQuery: `${countQuery} is:open`,
         closedQuery: `${countQuery} is:closed`,
         first: ITEMS_PER_PAGE,
-        after,
+        after: previousPageReference,
       },
     });
-  }, [isSearching, searchParams, runSearch]);
+  }, [isSearching, searchParams, runSearch, previousPageReference]);
 
   //Data processing
-
   const {
     issues,
-    totalIssues,
     totalOpenCount,
     totalClosedCount,
     pageInfo,
@@ -115,61 +115,29 @@ export default function IssuesPage() {
   const hasNextPage = pageInfo?.hasNextPage ?? false;
   const endCursor = pageInfo?.endCursor ?? null;
 
-  //Set cursor for next page (for the list)
   useEffect(() => {
     if (!hasNextPage || !endCursor) return;
+    const cursorSetFn = isSearching ? setSearchCursorByPage : setCursorByPage;
+    const nextPage = currentPage + 1;
 
-    if (isSearching) {
-      setSearchCursorByPage((prev) => {
-        const nextPage = currentPage + 1;
-        if (prev[nextPage] === endCursor) return prev;
-        return { ...prev, [nextPage]: endCursor };
-      });
-    } else {
-      setCursorByPage((prev) => {
-        const nextPage = currentPage + 1;
-        if (prev[nextPage] === endCursor) return prev;
-        return { ...prev, [nextPage]: endCursor };
-      });
-    }
+    cursorSetFn((prev) => {
+      if (prev[nextPage] === endCursor) return prev;
+      return { ...prev, [nextPage]: endCursor };
+    });
   }, [isSearching, hasNextPage, endCursor, currentPage]);
+
+  const { clearSearchIfEmpty, submitSearch } = useSearchHandlers(setSearchParams);
 
   const handleNextPage = useCallback(() => {
     if (!hasNextPage || !endCursor) return;
 
     setParams("page", String(currentPage + 1));
-  }, [isSearching, hasNextPage, endCursor, currentPage, setParams]);
+  }, [hasNextPage, endCursor, currentPage, setParams]);
 
   const handlePreviousPage = useCallback(() => {
     if (currentPage <= 1) return;
     setParams("page", String(currentPage - 1));
-  }, [isSearching, currentPage, setParams]);
-
-  //Search handlers
-
-  function clearSearchIfEmpty(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value === "") {
-      setSearchParams((prev) => {
-        const params = new URLSearchParams(prev);
-        params.delete("query");
-        return params;
-      });
-    }
-  }
-
-  function submitSearch(formData: FormData) {
-    const queryValue = formData.get("query")?.toString().trim() || "";
-
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      if (queryValue) {
-        params.set("query", queryValue);
-      } else {
-        params.delete("query");
-      }
-      return params;
-    });
-  }
+  }, [currentPage, setParams]);
 
   return (
     <>
@@ -183,30 +151,15 @@ export default function IssuesPage() {
           />
         </div>
         <div className="border-gh-muted mb-6 overflow-hidden rounded-lg border text-left">
-          <div className="filter-container bg-gh-bg-highlighted">
-            <div className="flex items-center justify-between px-4 py-2">
-              <div className="flex gap-0">
-                <StateFilters
-                  isActive={state === "open"}
-                  label={"open"}
-                  onClick={() => setParams("state", "open")}
-                  totalCount={totalOpenCount}
-                  loading={currentLoading}
-                />
-                <StateFilters
-                  label={"closed"}
-                  isActive={state === "closed"}
-                  onClick={() => setParams("state", "closed")}
-                  totalCount={totalClosedCount}
-                  loading={currentLoading}
-                />
-              </div>
-
-              <div>
-                <SortDropdown onClick={setParams} currentSort={sort} currentOrder={order} />
-              </div>
-            </div>
-          </div>
+          <IssuesFilterBar
+            setParams={setParams}
+            totalOpenCount={totalOpenCount}
+            totalClosedCount={totalClosedCount}
+            currentLoading={currentLoading}
+            state={state}
+            sort={sort}
+            order={order}
+          />
 
           <div className="issues-container pt-3">
             <IssuesList
@@ -217,13 +170,15 @@ export default function IssuesPage() {
             />
           </div>
         </div>
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onNext={handleNextPage}
-          onPrev={handlePreviousPage}
-          loading={currentLoading}
-        />
+        {totalPages > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onNext={handleNextPage}
+            onPrev={handlePreviousPage}
+            loading={currentLoading}
+          />
+        )}
       </div>
     </>
   );
