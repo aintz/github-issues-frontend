@@ -3,6 +3,7 @@ import { useIssueDetailQuery } from "../../../generated/graphql";
 import Comment from "../components/Comment";
 import CommentSkeleton from "../components/CommentSkeleton";
 import Labels from "../components/Labels";
+import LabelsSkeleton from "../components/LabelsSkeleton";
 
 export default function IssuesDetailPage() {
   const { number } = useParams();
@@ -41,8 +42,19 @@ export default function IssuesDetailPage() {
           <div className="bg-gh-muted mt-4 h-6 w-28 rounded-full" />
         </div>
 
-        <div className="mt-6">
-          <CommentSkeleton />
+        <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1">
+            <div className="mt-6">
+              <CommentSkeleton />
+            </div>
+          </div>
+
+          <aside className="w-full shrink-0 lg:w-64">
+            <h3 className="text-gh-gray text-xs">Labels</h3>
+            <div className="pt-2">
+              <LabelsSkeleton />
+            </div>
+          </aside>
         </div>
       </div>
     );
