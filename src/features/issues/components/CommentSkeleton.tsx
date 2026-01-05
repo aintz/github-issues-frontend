@@ -1,6 +1,6 @@
 export default function CommentSkeleton() {
   return (
-    <div className="flex pt-4">
+    <div className="flex pt-4" data-testid="comment-skeleton">
       <div className="issue-container flex w-full max-w-[80%] min-w-0 animate-pulse gap-6">
         <div className="avatar">
           <div className="bg-gh-muted h-10 w-10 rounded-full" />
