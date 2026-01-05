@@ -31,6 +31,7 @@ export default function useIssueFilters() {
       setSearchParams((prev) => {
         const params = new URLSearchParams(prev);
         params.set(label, param);
+        //check
         if (label === "state" || label === "sort" || label === "order" || label === "query") {
           params.set("page", "1");
         }
