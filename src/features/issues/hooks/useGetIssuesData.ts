@@ -1,22 +1,25 @@
 import { useEffect } from "react";
-import { useSearchIssuesLazyQuery, useIssuesQuery } from "../../../generated/graphql";
+import { useSearchIssuesLazyQuery, useIssuesQuery, IssueState } from "../../../generated/graphql";
+import type { IssueOrder } from "../../../generated/graphql";
+import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
 
-const ITEMS_PER_PAGE = 12;
-
-type useGetIssuesData = {
-  currentState: string;
-  previousPageReference: string;
-  orderBy:
-  isSearching: boolean
+type useGetIssuesDataProps = {
+  isSearching: boolean;
+  currentState: IssueState;
+  previousPageReference: string | null;
+  orderBy: IssueOrder;
+  searchParams: URLSearchParams;
+  ITEMS_PER_PAGE: number;
 };
 
 export default function useGetIssuesData({
+  isSearching,
   currentState,
   previousPageReference,
   orderBy,
-  isSearching,
-}:useGetIssuesData) {
-  //Regular list query
+  searchParams,
+  ITEMS_PER_PAGE,
+}: useGetIssuesDataProps) {
   const {
     data: listData,
     loading: listLoading,
@@ -53,5 +56,5 @@ export default function useGetIssuesData({
     });
   }, [isSearching, searchParams, runSearch, previousPageReference]);
 
-  return { listData, listError, listLoading, refetch };
+  return { listData, listLoading, listError, refetch, searchResult };
 }
