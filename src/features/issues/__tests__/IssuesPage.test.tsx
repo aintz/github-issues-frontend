@@ -1,4 +1,4 @@
-import { MockedProvider } from "@apollo/client/testing/react";
+import { MockedProvider } from "@apollo/client/testing";
 import { render, screen, waitForElementToBeRemoved, cleanup, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
@@ -17,9 +17,12 @@ import {
   ISSUE_DETAIL_SUCCESS_FIXTURE,
   REPO_CLOSED_SUCCESS_FIXTURE,
 } from "../test/fixtures";
-import { SearchIssuesDocument } from "../../../generated/graphql";
-import IssuesPage from "../pages/IssuesPage";
-
+import {
+  IssueOrderField,
+  IssueState,
+  SearchIssuesDocument,
+  OrderDirection,
+} from "../../../generated/graphql";
 describe("Issues List", () => {
   afterEach(() => {
     cleanup();
@@ -27,7 +30,7 @@ describe("Issues List", () => {
 
   it("Should render the skeleton loader while loading", () => {
     render(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mocks={[]}>
         <MemoryRouter initialEntries={["/issues"]}>
           <Routes>
             <Route path="/issues" element={<IssuesPage />} />
@@ -46,7 +49,7 @@ describe("Issues List", () => {
       }),
     ];
     render(
-      <MockedProvider mocks={successMock} addTypename>
+      <MockedProvider mocks={successMock}>
         <MemoryRouter initialEntries={["/issues"]}>
           <Routes>
             <Route path="/issues" element={<IssuesPage />} />
@@ -71,7 +74,7 @@ describe("Issues List", () => {
       }),
     ];
     render(
-      <MockedProvider mocks={errorMock} addTypename>
+      <MockedProvider mocks={errorMock}>
         <MemoryRouter initialEntries={["/issues"]}>
           <Routes>
             <Route path="/issues" element={<IssuesPage />} />
@@ -98,7 +101,7 @@ describe("Issues List", () => {
       }),
     ];
     render(
-      <MockedProvider mocks={emptyMocks} addTypename>
+      <MockedProvider mocks={emptyMocks}>
         <MemoryRouter initialEntries={["/issues"]}>
           <Routes>
             <Route path="/issues" element={<IssuesPage />} />
@@ -122,9 +125,8 @@ describe("Issues List", () => {
         repository: ISSUE_DETAIL_SUCCESS_FIXTURE,
       }),
     ];
-    const { unmount } = render(
-      //neeed to unmount, double renders otherwise
-      <MockedProvider mocks={mocks} addTypename>
+    render(
+      <MockedProvider mocks={mocks}>
         <MemoryRouter initialEntries={["/"]}>
           <Routes>
             <Route path="/" element={<IssuesPage />} />
@@ -139,9 +141,6 @@ describe("Issues List", () => {
 
     expect(issueLink).toBeInTheDocument();
     expect(issueLink).toHaveAttribute("href", "/issues/34775");
-
-    const issueNumber = issueLink.getAttribute("href");
-    const cleanIssueNumber = issueNumber ? issueNumber.split("/issues/")[1] : null;
 
     await user.click(issueLink);
 
@@ -158,12 +157,12 @@ describe("Issues List", () => {
       const mocks = [
         makeIssuesSuccessMock({
           repository: REPO_ISSUES_SUCCESS_FIXTURE,
-          variables: { states: ["CLOSED"] },
+          variables: { states: [IssueState.Open] },
         }),
       ];
 
       render(
-        <MockedProvider mocks={mocks} addTypename>
+        <MockedProvider mocks={mocks}>
           <MemoryRouter initialEntries={["/issues?state=closed"]}>
             <Routes>
               <Route path="/issues" element={<IssuesPage />} />
@@ -183,11 +182,13 @@ describe("Issues List", () => {
       const mocks = [
         makeIssuesSuccessMock({
           repository: REPO_ISSUES_SUCCESS_FIXTURE,
-          variables: { orderBy: { field: "CREATED_AT", direction: "DESC" } },
+          variables: {
+            orderBy: { field: IssueOrderField.CreatedAt, direction: OrderDirection.Desc },
+          },
         }),
       ];
       render(
-        <MockedProvider mocks={mocks} addTypename>
+        <MockedProvider mocks={mocks}>
           <MemoryRouter initialEntries={["/issues?state=closed"]}>
             <Routes>
               <Route path="/issues" element={<IssuesPage />} />
@@ -208,16 +209,16 @@ describe("Issues List", () => {
       const mocks = [
         makeIssuesSuccessMock({
           repository: REPO_ISSUES_SUCCESS_FIXTURE,
-          variables: { states: ["OPEN"] },
+          variables: { states: [IssueState.Open] },
         }),
         makeIssuesSuccessMock({
           repository: REPO_CLOSED_SUCCESS_FIXTURE, //the succcess already ha open issues, this is why i created a new fixture for closed
-          variables: { states: ["CLOSED"] },
+          variables: { states: [IssueState.Closed] },
         }),
       ];
 
       render(
-        <MockedProvider mocks={mocks} addTypename>
+        <MockedProvider mocks={mocks}>
           <MemoryRouter initialEntries={["/issues?state=open"]}>
             <Routes>
               <Route path="/issues" element={<IssuesPage />} />
@@ -242,12 +243,12 @@ describe("Issues List", () => {
       const mocks = [
         makeIssuesSuccessMock({
           repository: REPO_ISSUES_SUCCESS_FIXTURE,
-          variables: { states: ["OPEN"] },
+          variables: { states: [IssueState.Open] },
         }),
       ];
 
       render(
-        <MockedProvider mocks={mocks} addTypename>
+        <MockedProvider mocks={mocks}>
           <MemoryRouter initialEntries={["/issues?state=open"]}>
             <Routes>
               <Route path="/issues" element={<IssuesPage />} />
@@ -279,7 +280,7 @@ describe("Issues List", () => {
 
     function renderIssuesPage(mocks: any[], initialEntry: string) {
       return render(
-        <MockedProvider mocks={mocks} addTypename>
+        <MockedProvider mocks={mocks}>
           <MemoryRouter initialEntries={[initialEntry]}>
             <Routes>
               <Route
@@ -341,7 +342,7 @@ describe("Issues List", () => {
 
       const listMock = makeIssuesSuccessMock({
         repository: REPO_ISSUES_SUCCESS_FIXTURE,
-        variables: { states: ["OPEN"] },
+        variables: { states: [IssueState.Open] },
       });
 
       const searchMock = {
@@ -375,7 +376,7 @@ describe("Issues List", () => {
                   id: "I_kwDOAJy2Ks7QXe2x",
                   number: 100,
                   title: "Search spam issue",
-                  state: "OPEN",
+                  state: IssueState.Open,
                   createdAt: "2025-10-08T14:59:23Z",
                   updatedAt: "2026-01-02T14:39:28Z",
                   comments: { __typename: "IssueCommentConnection", totalCount: 1 },
@@ -479,7 +480,6 @@ describe("Issues List", () => {
       return render(
         <MockedProvider
           mocks={mocks}
-          addTypename
           defaultOptions={{
             watchQuery: { fetchPolicy: "no-cache" },
             query: { fetchPolicy: "no-cache" },
@@ -551,11 +551,11 @@ describe("Issues List", () => {
       };
       const mocks = [
         makeIssuesSuccessMock({
-          variables: { after: null, states: ["OPEN"] },
+          variables: { after: null, states: [IssueState.Open] },
           repository: repoPage1,
         }),
         makeIssuesSuccessMock({
-          variables: { after: "CURSOR_PAGE_1", states: ["OPEN"] },
+          variables: { after: "CURSOR_PAGE_1", states: [IssueState.Open] },
           repository: repoPage2,
         }),
       ];
@@ -625,15 +625,15 @@ describe("Issues List", () => {
       };
       const mocks = [
         makeIssuesSuccessMock({
-          variables: { after: null, states: ["OPEN"] },
+          variables: { after: null, states: [IssueState.Open] },
           repository: repoPage1,
         }),
         makeIssuesSuccessMock({
-          variables: { after: "CURSOR_PAGE_1", states: ["OPEN"] },
+          variables: { after: "CURSOR_PAGE_1", states: [IssueState.Open] },
           repository: repoPage2,
         }),
         makeIssuesSuccessMock({
-          variables: { after: null, states: ["OPEN"] },
+          variables: { after: null, states: [IssueState.Open] },
           repository: repoPage1,
         }),
       ];
@@ -718,11 +718,11 @@ describe("Issues List", () => {
       };
       const mocks = [
         makeIssuesSuccessMock({
-          variables: { after: null, states: ["OPEN"] },
+          variables: { after: null, states: [IssueState.Open] },
           repository: repoPage1,
         }),
         makeIssuesSuccessMock({
-          variables: { after: "CURSOR_PAGE_1", states: ["OPEN"] },
+          variables: { after: "CURSOR_PAGE_1", states: [IssueState.Open] },
           repository: repoPage2,
         }),
       ];
@@ -772,7 +772,7 @@ describe("Issues List", () => {
 
       const mocks = [
         makeIssuesSuccessMock({
-          variables: { after: null, states: ["OPEN"] },
+          variables: { after: null, states: [IssueState.Open] },
           repository: repoPage1,
         }),
       ];
