@@ -11,6 +11,8 @@ import WelcomeBanner from "../components/WelcomeBanner";
 import Pagination from "../components/Pagination";
 import useIssueFilters from "../hooks/useIssueFilters";
 
+const ITEMS_PER_PAGE = 12;
+
 export default function IssuesPage() {
   //returns filters and setters from URL search params
   const {
@@ -65,7 +67,7 @@ export default function IssuesPage() {
       owner: "facebook",
       name: "react",
       states: [currentState],
-      first: 12,
+      first: ITEMS_PER_PAGE,
       after,
       orderBy,
     },
@@ -85,7 +87,7 @@ export default function IssuesPage() {
         query: buildIssueSearchQuery(searchParams),
         openQuery: `${countQuery} is:open`,
         closedQuery: `${countQuery} is:closed`,
-        first: 12,
+        first: ITEMS_PER_PAGE,
         after,
       },
     });
@@ -122,7 +124,7 @@ export default function IssuesPage() {
   const pageInfo = isSearching
     ? searchResult.data?.results?.pageInfo
     : data?.repository?.issues?.pageInfo;
-  const totalPages = Math.ceil(totalIssues / 12);
+  const totalPages = Math.ceil(totalIssues / ITEMS_PER_PAGE);
   const hasNextPage = pageInfo?.hasNextPage ?? false;
   const endCursor = pageInfo?.endCursor ?? null;
 

@@ -5,6 +5,8 @@ import {
   IssueDetailDocument,
 } from "../../../generated/graphql";
 
+const ITEMS_PER_PAGE = 12;
+
 export const DEFAULT_OWNER = "facebook";
 export const DEFAULT_REPO_NAME = "react";
 
@@ -12,7 +14,7 @@ export const DEFAULT_LIST_VARIABLES = {
   owner: "facebook",
   name: "react",
   states: [IssueState.Open],
-  first: 12,
+  first: ITEMS_PER_PAGE,
   after: null,
   orderBy: { field: "CREATED_AT", direction: "DESC" },
 } as const;
@@ -79,7 +81,7 @@ export function makeListVariables(overrides?: Partial<Record<string, any>>) {
     owner: DEFAULT_OWNER,
     name: DEFAULT_REPO_NAME,
     states: [IssueState.Open],
-    first: 12,
+    first: ITEMS_PER_PAGE,
     after: null,
     orderBy: defaultOrderby,
     ...overrides,
@@ -91,7 +93,7 @@ export function makeSearchVariables(overrides?: Partial<Record<string, any>>) {
     query: "FULL_QUERY",
     openQuery: "COUNT_QUERY is:open",
     closedQuery: "COUNT_QUERY is:closed",
-    first: 12,
+    first: ITEMS_PER_PAGE,
     after: null,
     ...overrides,
   };
