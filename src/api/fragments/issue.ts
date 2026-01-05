@@ -14,5 +14,12 @@ export const ISSUE_FIELDS_FRAGMENT = gql`
     author {
       login
     }
+    labels(first: 5) {
+      nodes {
+        id
+        name
+        color
+      }
+    }
   }
 `;

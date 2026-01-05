@@ -26,7 +26,7 @@ export default function Pagination({
         &lt; Previous
       </button>
 
-      {loading ? (
+      {loading || totalPages === 0 ? (
         <p className="text-sm">Page {currentPage}</p>
       ) : (
         <p className="text-sm">

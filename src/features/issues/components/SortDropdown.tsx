@@ -71,7 +71,7 @@ export default function SortDropdown({ onClick, currentSort, currentOrder }: Sor
         <div className="border-gh-muted bg-gh-header-bg absolute top-full left-0 mt-2 w-48 w-[177px] rounded-lg border-2 pt-3 shadow-md">
           <div className="border-b-gh-muted border-b px-3 pb-2">
             <p className="text-gh-gray text-xs">Sort by</p>
-            <ul className="py-1">
+            <ul className="dropdown-list py-1">
               <li
                 onClick={() => handleClick("sort", "created")}
                 className="mb-2 flex items-center justify-start py-1.5 pl-[5px] text-sm"
@@ -115,7 +115,7 @@ export default function SortDropdown({ onClick, currentSort, currentOrder }: Sor
           </div>
           <div className="border-b-gh-muted border-b px-3 py-2 pb-2">
             <p className="text-gh-gray text-xs">Order</p>
-            <ul className="py-1">
+            <ul className="dropdown-list py-1">
               <li
                 onClick={() => handleClick("order", "asc")}
                 className="mb-2 flex items-center justify-start py-1.5 pl-[5px] text-sm"
@@ -135,7 +135,7 @@ export default function SortDropdown({ onClick, currentSort, currentOrder }: Sor
                 >
                   <path d="m12.927 2.573 3 3A.25.25 0 0 1 15.75 6H13.5v6.75a.75.75 0 0 1-1.5 0V6H9.75a.25.25 0 0 1-.177-.427l3-3a.25.25 0 0 1 .354 0ZM0 12.25a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75Zm0-4a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 8.25Zm0-4a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 4.25Z"></path>
                 </svg>
-                Oldest
+                {currentSort === "comments" ? "Ascending" : "Oldest"}
               </li>
               <li
                 onClick={() => handleClick("order", "desc")}
@@ -158,7 +158,7 @@ export default function SortDropdown({ onClick, currentSort, currentOrder }: Sor
                 >
                   <path d="M0 4.25a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 4.25Zm0 4a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 8.25Zm0 4a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75ZM13.5 10h2.25a.25.25 0 0 1 .177.427l-3 3a.25.25 0 0 1-.354 0l-3-3A.25.25 0 0 1 9.75 10H12V3.75a.75.75 0 0 1 1.5 0V10Z"></path>
                 </svg>
-                Newest
+                {currentSort === "comments" ? "Descending" : "Newest"}
               </li>
             </ul>
           </div>
