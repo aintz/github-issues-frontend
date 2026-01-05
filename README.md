@@ -2,6 +2,8 @@
 
 A web application for browsing and searching GitHub issues from the React repository, with filtering, sorting, and search capabilities.
 
+You can take a look at the deployed project [here](https://github-issues-frontend.vercel.app/)
+
 ## Prerequisites
 
 - Node.js (v18 or higher recommended)
@@ -92,6 +94,14 @@ npm run test        # Run tests
 ```
 
 Tests are located alongside their components in `__tests__` directories.
+
+## CI / CD
+
+This project uses **GitHub Actions** for continuous integration:
+
+- Type checking
+- Tests
+- Production build and deployment to Vercel
 
 ## Future Enhancements
 
