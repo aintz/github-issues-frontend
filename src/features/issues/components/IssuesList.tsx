@@ -16,7 +16,7 @@ export default function IssuesList({ loading, error, refetch, issues }: IssuesLi
   if (error)
     return (
       <>
-        <p className="text-sm text-red-700">Connection failed</p>
+        <p className="text-sm text-red-700">Error</p>
         <p className="text-sm text-red-700">{error.message}</p>
         <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
           Retry
