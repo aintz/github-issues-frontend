@@ -1,4 +1,6 @@
 import type { IssueFieldsFragment } from "../../../generated/graphql";
+import { normalizeSearchData, normalizeListData } from "../adapters/issueDataAdapter";
+
 type useProcessedIssuesDataProps = {
   isSearching: boolean;
   listData: any;
@@ -7,6 +9,7 @@ type useProcessedIssuesDataProps = {
   listLoading: boolean;
   listError: any;
 };
+
 export default function useProcessedIssuesData({
   isSearching,
   listData,
@@ -15,41 +18,22 @@ export default function useProcessedIssuesData({
   listLoading,
   listError,
 }: useProcessedIssuesDataProps) {
-  const listNodes = listData?.repository?.issues?.nodes ?? [];
-  const searchNodes = searchResult.data?.results?.nodes ?? [];
+  const normalizedData = isSearching
+    ? normalizeSearchData(searchResult)
+    : normalizeListData(listData, listLoading, listError);
 
-  const issues = (isSearching ? searchNodes : listNodes).filter(
-    (node): node is IssueFieldsFragment => node != null,
-  );
+  const issues = normalizedData.nodes.filter((node): node is IssueFieldsFragment => node != null);
 
-  const totalIssues = isSearching
-    ? (searchResult.data?.results?.issueCount ?? 0)
-    : (listData?.repository?.issues?.totalCount ?? 0);
-
-  const totalOpenCount = isSearching
-    ? (searchResult.data?.open?.issueCount ?? 0)
-    : (listData?.repository?.openIssues?.totalCount ?? 0);
-  const totalClosedCount = isSearching
-    ? (searchResult.data?.closed?.issueCount ?? 0)
-    : (listData?.repository?.closedIssues?.totalCount ?? 0);
-
-  const pageInfo = isSearching
-    ? searchResult.data?.results?.pageInfo
-    : listData?.repository?.issues?.pageInfo;
-
-  const totalPages = Math.ceil(totalIssues / itemsPerPage);
-
-  const currentLoading = isSearching ? searchResult.loading : listLoading;
-  const currentError = isSearching ? searchResult.error : listError;
+  const totalPages = Math.ceil(normalizedData.totalCount / itemsPerPage);
 
   return {
     issues,
-    totalIssues,
-    totalOpenCount,
-    totalClosedCount,
-    pageInfo,
+    totalIssues: normalizedData.totalCount,
+    totalOpenCount: normalizedData.openCount,
+    totalClosedCount: normalizedData.closedCount,
+    pageInfo: normalizedData.pageInfo,
     totalPages,
-    currentLoading,
-    currentError,
+    currentLoading: normalizedData.loading,
+    currentError: normalizedData.error,
   };
 }
