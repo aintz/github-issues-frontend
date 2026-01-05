@@ -17,7 +17,7 @@ export default function IssuesList({ loading, error, refetch, issues }: IssuesLi
     return (
       <>
         <p className="text-sm text-red-700">Error</p>
-        <p className="text-sm text-red-700">{error.message}</p>
+        <p className="text-sm text-red-700">Failed to load issues. Please retry.</p>
         <button onClick={() => refetch()} className="mt-3 rounded-md border px-3 py-2">
           Retry
         </button>
