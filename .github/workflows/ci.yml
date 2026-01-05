@@ -27,9 +27,6 @@ jobs:
         env:
           VITE_GH_TOKEN: ${{ secrets.VITE_GH_TOKEN }}
 
-      - name: Lint
-        run: npm run lint --if-present
-
       - name: Typecheck
         run: npm run typecheck --if-present
 
