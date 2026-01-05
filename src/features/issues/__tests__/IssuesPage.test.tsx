@@ -3,6 +3,7 @@ import { render, screen, waitForElementToBeRemoved, cleanup, within } from "@tes
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import IssuesDetailPage from "../pages/IssuesDetailPage";
+import IssuesPage from "../pages/IssuesPage";
 import { vi } from "vitest";
 import { waitFor } from "@testing-library/react";
 import {
