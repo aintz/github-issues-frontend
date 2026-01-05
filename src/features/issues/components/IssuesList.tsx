@@ -1,11 +1,11 @@
-import type { ErrorLike } from "@apollo/client";
+import type { ApolloError } from "@apollo/client";
 import IssuesListItem from "./IssuesListItem";
 import { IssuesListSkeleton } from "./IssuesListSkeleton";
 import type { IssueFieldsFragment } from "../../../generated/graphql";
 
 type IssuesListProps = {
   loading: boolean;
-  error: ErrorLike | undefined;
+  error: ApolloError | undefined;
   refetch: () => void;
   issues: IssueFieldsFragment[];
 };

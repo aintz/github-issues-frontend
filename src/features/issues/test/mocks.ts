@@ -2,8 +2,12 @@ import {
   IssuesDocument,
   SearchIssuesDocument,
   IssueState,
+  IssueOrderField,
+  OrderDirection,
   IssueDetailDocument,
 } from "../../../generated/graphql";
+
+import type { IssuesQueryVariables } from "../../../generated/graphql";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -16,8 +20,8 @@ export const DEFAULT_LIST_VARIABLES = {
   states: [IssueState.Open],
   first: ITEMS_PER_PAGE,
   after: null,
-  orderBy: { field: "CREATED_AT", direction: "DESC" },
-} as const;
+  orderBy: { field: IssueOrderField.CreatedAt, direction: OrderDirection.Desc },
+} satisfies IssuesQueryVariables;
 
 export function makeIssuesErrorMock(overrides?: {
   variables?: Partial<typeof DEFAULT_LIST_VARIABLES>;
@@ -207,7 +211,7 @@ export function makeSearchMock({ variables, data }: { variables?: any; data: any
 }
 
 export function makeIssuesSuccessMock(overrides?: {
-  variables?: Partial<typeof DEFAULT_LIST_VARIABLES>;
+  variables?: Partial<IssuesQueryVariables>;
   repository?: any;
 }) {
   return {

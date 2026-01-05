@@ -1,24 +1,10 @@
-import { MockedProvider } from "@apollo/client/testing/react";
-import { render, screen, waitForElementToBeRemoved, cleanup, within } from "@testing-library/react";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import userEvent from "@testing-library/user-event";
-import IssuesPage from "../pages/IssuesPage";
+import { MockedProvider } from "@apollo/client/testing";
+import { render, screen, cleanup } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import IssuesDetailPage from "../pages/IssuesDetailPage";
-import { vi } from "vitest";
-import { waitFor } from "@testing-library/react";
-import {
-  makeIssuesSuccessMock,
-  makeIssuesErrorMock,
-  makeIssuesEmptySuccessMock,
-  makeIssueDetailSuccessMock,
-} from "../test/mocks";
+
 import { describe, it, expect, afterEach } from "vitest";
-import {
-  REPO_ISSUES_SUCCESS_FIXTURE,
-  ISSUE_DETAIL_SUCCESS_FIXTURE,
-  REPO_CLOSED_SUCCESS_FIXTURE,
-} from "../test/fixtures";
-import { SearchIssuesDocument } from "../../../generated/graphql";
+
 import { IssueDetailDocument } from "../../../generated/graphql";
 
 describe("Issue Detail Page", () => {
@@ -28,7 +14,7 @@ describe("Issue Detail Page", () => {
 
   function renderDetail(mocks: any[], initialEntry: string) {
     return render(
-      <MockedProvider mocks={mocks} addTypename>
+      <MockedProvider mocks={mocks}>
         <MemoryRouter initialEntries={[initialEntry]}>
           <Routes>
             <Route path="/issues/:number" element={<IssuesDetailPage />} />
