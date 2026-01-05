@@ -38,7 +38,7 @@
   .issue-icon {
     height: 16px;
     width: 16px;
-    border: 1px solid red; /* For visualization during development */
+    border: 1px solid; /* For visualization during development */
     border-radius: 20px;
     margin-top: 5px;
   }
@@ -51,9 +51,11 @@
 
   button:hover,
   li:hover {
-    background-color: #252b34;
     border-radius: 6px;
     cursor: pointer;
+  }
+  .dropdown-list li:hover {
+    background-color: #252b34;
   }
 
   .github-body-content {
