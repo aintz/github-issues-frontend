@@ -1,6 +1,3 @@
-import { useIssuesQuery } from "../../../generated/graphql";
-import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
-import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
 import { useEffect, useCallback } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
 import IssuesList from "../components/IssuesList";
@@ -13,6 +10,7 @@ import useProcessedIssuesData from "../hooks/useProcessedIssueData";
 import useSearchHandlers from "../hooks/useSearchHandlers";
 import IssuesFilterBar from "../components/IssuesFilterBar";
 import useGetIssuesData from "../hooks/useGetIssuesData";
+const ITEMS_PER_PAGE = 12;
 
 export default function IssuesPage() {
   //returns filters and setters from URL search params
@@ -48,7 +46,6 @@ export default function IssuesPage() {
     setParams("page", "1");
   }, [signature]);
 
-  //List query
   const previousPageReference =
     currentPage === 1
       ? null
@@ -56,43 +53,14 @@ export default function IssuesPage() {
         ? (searchCursorByPage[currentPage] ?? null)
         : (cursorByPage[currentPage] ?? null);
 
-  const {} = useGetIssuesData();
-
-  const {
-    data: listData,
-    loading: listLoading,
-    error: listError,
-    refetch,
-  } = useIssuesQuery({
-    variables: {
-      owner: "facebook",
-      name: "react",
-      states: [currentState],
-      first: ITEMS_PER_PAGE,
-      after: previousPageReference,
-      orderBy,
-    },
-    skip: isSearching,
-    notifyOnNetworkStatusChange: true,
+  const { listData, listError, listLoading, refetch, searchResult } = useGetIssuesData({
+    isSearching,
+    currentState,
+    previousPageReference,
+    orderBy,
+    searchParams,
+    ITEMS_PER_PAGE,
   });
-
-  //Search query
-  const [runSearch, searchResult] = useSearchIssuesLazyQuery();
-
-  //Rerun search on filter change
-  useEffect(() => {
-    if (!isSearching) return;
-    const countQuery = buildIssueSearchQuery(searchParams, { includeState: false });
-    runSearch({
-      variables: {
-        query: buildIssueSearchQuery(searchParams),
-        openQuery: `${countQuery} is:open`,
-        closedQuery: `${countQuery} is:closed`,
-        first: ITEMS_PER_PAGE,
-        after: previousPageReference,
-      },
-    });
-  }, [isSearching, searchParams, runSearch, previousPageReference]);
 
   //Data processing
   const {
