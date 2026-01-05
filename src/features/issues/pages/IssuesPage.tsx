@@ -2,15 +2,16 @@ import { useIssuesQuery } from "../../../generated/graphql";
 import StateFilters from "../components/StateFilters";
 import { useSearchIssuesLazyQuery } from "../../../generated/graphql";
 import { buildIssueSearchQuery } from "../../../helpers/helperBuildIssueSearchQuery";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import IssuesSearchBar from "../components/IssuesSearchBar";
 import SortDropdown from "../components/SortDropdown";
 import IssuesList from "../components/IssuesList";
-import type { IssueFieldsFragment } from "../../../generated/graphql";
 import WelcomeBanner from "../components/WelcomeBanner";
 import Pagination from "../components/Pagination";
 import useIssueFilters from "../hooks/useIssueFilters";
-
+import useListPagination from "../hooks/useListPagination";
+import useSearchPagination from "../hooks/useSearchPagination";
+import useProcessedIssuesData from "../hooks/useProcessedIssueData";
 const ITEMS_PER_PAGE = 12;
 
 export default function IssuesPage() {
@@ -29,11 +30,15 @@ export default function IssuesPage() {
     signature,
   } = useIssueFilters();
 
-  //cursor for list pagination
-  const [cursorByPage, setCursorByPage] = useState<Record<number, string | null>>({ 1: null });
-  //cursor for search pagination
-  const [searchCursorByPage, setSearchCursorByPage] = useState<Record<number, string | null>>({
-    1: null,
+  const { cursorByPage, setCursorByPage } = useListPagination({
+    setParams,
+    isSearching,
+    currentPage,
+  });
+  const { searchCursorByPage, setSearchCursorByPage } = useSearchPagination({
+    setParams,
+    isSearching,
+    currentPage,
   });
 
   //Reset cursors on filter change
@@ -51,18 +56,12 @@ export default function IssuesPage() {
         ? (searchCursorByPage[currentPage] ?? null)
         : (cursorByPage[currentPage] ?? null);
 
-  //If searching and no cursor for the current page, reset to page 1
-  useEffect(() => {
-    if (currentPage === 1) return;
-    if (!isSearching && !cursorByPage[currentPage]) {
-      setParams("page", "1");
-    }
-    if (isSearching && !searchCursorByPage[currentPage]) {
-      setParams("page", "1");
-    }
-  }, [isSearching, currentPage, cursorByPage, setParams]);
-
-  const { data, loading, error, refetch } = useIssuesQuery({
+  const {
+    data: listData,
+    loading: listLoading,
+    error: listError,
+    refetch,
+  } = useIssuesQuery({
     variables: {
       owner: "facebook",
       name: "react",
@@ -95,61 +94,44 @@ export default function IssuesPage() {
 
   //Data processing
 
-  //Issues
-  const listNodes = data?.repository?.issues?.nodes ?? [];
-  const searchNodes = searchResult.data?.results?.nodes ?? [];
+  const {
+    issues,
+    totalIssues,
+    totalOpenCount,
+    totalClosedCount,
+    pageInfo,
+    totalPages,
+    currentLoading,
+    currentError,
+  } = useProcessedIssuesData({
+    isSearching,
+    listData,
+    listLoading,
+    listError,
+    searchResult,
+    itemsPerPage: ITEMS_PER_PAGE,
+  });
 
-  const issues = (isSearching ? searchNodes : listNodes).filter(
-    (node): node is IssueFieldsFragment => {
-      return node?.__typename === "Issue";
-    },
-  );
-  const totalIssues = isSearching
-    ? (searchResult.data?.results?.issueCount ?? 0)
-    : (data?.repository?.issues?.totalCount ?? 0);
-
-  //Loading and error
-  const currentLoading = isSearching ? searchResult.loading : loading;
-  const currentError = isSearching ? searchResult.error : error;
-
-  //Total counts
-  const totalOpenCount = isSearching
-    ? (searchResult.data?.open?.issueCount ?? 0)
-    : (data?.repository?.openIssues?.totalCount ?? 0);
-  const totalClosedCount = isSearching
-    ? (searchResult.data?.closed?.issueCount ?? 0)
-    : (data?.repository?.closedIssues?.totalCount ?? 0);
-
-  //Pagination
-  const pageInfo = isSearching
-    ? searchResult.data?.results?.pageInfo
-    : data?.repository?.issues?.pageInfo;
-  const totalPages = Math.ceil(totalIssues / ITEMS_PER_PAGE);
   const hasNextPage = pageInfo?.hasNextPage ?? false;
   const endCursor = pageInfo?.endCursor ?? null;
 
   //Set cursor for next page (for the list)
   useEffect(() => {
-    if (isSearching) return;
     if (!hasNextPage || !endCursor) return;
 
-    setCursorByPage((prev) => {
-      const nextPage = currentPage + 1;
-      if (prev[nextPage] === endCursor) return prev;
-      return { ...prev, [nextPage]: endCursor };
-    });
-  }, [isSearching, hasNextPage, endCursor, currentPage]);
-
-  //Set cursor for next page (for the search)
-  useEffect(() => {
-    if (!isSearching) return;
-    if (!hasNextPage || !endCursor) return;
-
-    setSearchCursorByPage((prev) => {
-      const nextPage = currentPage + 1;
-      if (prev[nextPage] === endCursor) return prev;
-      return { ...prev, [nextPage]: endCursor };
-    });
+    if (isSearching) {
+      setSearchCursorByPage((prev) => {
+        const nextPage = currentPage + 1;
+        if (prev[nextPage] === endCursor) return prev;
+        return { ...prev, [nextPage]: endCursor };
+      });
+    } else {
+      setCursorByPage((prev) => {
+        const nextPage = currentPage + 1;
+        if (prev[nextPage] === endCursor) return prev;
+        return { ...prev, [nextPage]: endCursor };
+      });
+    }
   }, [isSearching, hasNextPage, endCursor, currentPage]);
 
   const handleNextPage = useCallback(() => {
@@ -209,14 +191,14 @@ export default function IssuesPage() {
                   label={"open"}
                   onClick={() => setParams("state", "open")}
                   totalCount={totalOpenCount}
-                  loading={loading}
+                  loading={currentLoading}
                 />
                 <StateFilters
                   label={"closed"}
                   isActive={state === "closed"}
                   onClick={() => setParams("state", "closed")}
                   totalCount={totalClosedCount}
-                  loading={loading}
+                  loading={currentLoading}
                 />
               </div>
 
