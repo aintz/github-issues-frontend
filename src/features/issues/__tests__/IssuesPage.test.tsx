@@ -2,7 +2,6 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { render, screen, waitForElementToBeRemoved, cleanup, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
-import IssuesPage from "../pages/IssuesPage";
 import IssuesDetailPage from "../pages/IssuesDetailPage";
 import { vi } from "vitest";
 import { waitFor } from "@testing-library/react";
@@ -19,6 +18,7 @@ import {
   REPO_CLOSED_SUCCESS_FIXTURE,
 } from "../test/fixtures";
 import { SearchIssuesDocument } from "../../../generated/graphql";
+import IssuesPage from "../pages/IssuesPage";
 
 describe("Issues List", () => {
   afterEach(() => {
