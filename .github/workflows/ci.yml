@@ -25,7 +25,7 @@ jobs:
       - name: Generate GraphQL types
         run: npm run codegen
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          VITE_GH_TOKEN: ${{ secrets.VITE_GH_TOKEN }}
 
       - name: Lint
         run: npm run lint --if-present
